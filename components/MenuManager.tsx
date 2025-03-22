@@ -1,126 +1,113 @@
-"use client";
-
 import { useState } from "react";
-import { useOrderContext, MenuItem } from "@/context/OrderContext";
+import { updateMenuItem } from "@/lib/supabase";
+import { toast } from "react-toastify";
 
-export default function MenuManager() {
-  const {
-    selectedEvent,
-    addMenuItem,
-    menu,
-    deleteMenuItems,
-    terminateMenuItem,
-    reopenMenuItem,
-  } = useOrderContext();
-  const [title, setTitle] = useState("");
-  const [price, setPrice] = useState("");
-  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+function MenuItem({
+  item,
+  onEdit,
+}: {
+  item: any;
+  onEdit: (id: number, title: string, price: number) => void;
+}) {
+  return (
+    <div className="flex justify-between items-center p-2 border-b">
+      <span>
+        {item.title} - €{item.price}
+      </span>
+      <button
+        onClick={() => onEdit(item.id, item.title, item.price)}
+        className="text-blue-500 ml-2"
+      >
+        ✏️
+      </button>
+    </div>
+  );
+}
 
-  const handleAdd = () => {
-    if (!title || !price) return;
-    addMenuItem(title, parseFloat(price));
-    setTitle("");
-    setPrice("");
-  };
+export default function MenuManager({
+  menu,
+  setMenu,
+}: {
+  menu: any[];
+  setMenu: (menu: any[]) => void;
+}) {
+  const [editingItem, setEditingItem] = useState<{
+    id: number;
+    title: string;
+    price: number;
+  } | null>(null);
 
-  const handleCheckboxChange = (id: number, checked: boolean) => {
-    if (checked) {
-      setSelectedIds([...selectedIds, id]);
-    } else {
-      setSelectedIds(selectedIds.filter((selectedId) => selectedId !== id));
+  async function handleUpdateMenuItem(
+    id: number,
+    title: string,
+    price: number
+  ) {
+    try {
+      const updatedItem = await updateMenuItem(id, title, price);
+      setMenu(menu.map((item) => (item.id === id ? updatedItem : item)));
+      setEditingItem(null);
+      toast.success("Portata aggiornata!");
+    } catch (error) {
+      toast.error("Errore nella modifica della portata.");
     }
-  };
-
-  const handleDelete = () => {
-    if (selectedIds.length > 0) {
-      deleteMenuItems(selectedIds);
-      setSelectedIds([]);
-    }
-  };
-
-  const handleTerminate = (id: number) => {
-    terminateMenuItem(id);
-  };
-
-  const handleReopen = (id: number) => {
-    reopenMenuItem(id);
-  };
+  }
 
   return (
-    <div className="p-4 border rounded">
-      <h2 className="text-xl font-bold">Menu di {selectedEvent?.title}</h2>
-      <ul className="space-y-2">
-        {menu.map((item: MenuItem) => (
-          <li
-            key={item.id}
-            className={`border p-2 flex items-center justify-between ${
-              item.terminated ? "bg-gray-300" : ""
-            }`}
-          >
-            <div className="flex items-center">
-              {!item.terminated && (
-                <input
-                  type="checkbox"
-                  className="mr-2"
-                  checked={selectedIds.includes(item.id)}
-                  onChange={(e) =>
-                    handleCheckboxChange(item.id, e.target.checked)
-                  }
-                />
-              )}
-              <span>
-                {item.title} - €{item.price.toFixed(2)}
-              </span>
+    <div>
+      <h2 className="text-xl font-bold">Menu</h2>
+      {menu.map((item) => (
+        <MenuItem
+          key={item.id}
+          item={item}
+          onEdit={(id, title, price) => setEditingItem({ id, title, price })}
+        />
+      ))}
+
+      {editingItem && (
+        <div className="fixed top-0 left-0 w-full h-full flex justify-center items-center bg-black bg-opacity-50">
+          <div className="bg-white p-4 rounded">
+            <h3 className="text-lg font-bold">Modifica portata</h3>
+            <input
+              className="border p-2 w-full mb-2"
+              value={editingItem.title}
+              onChange={(e) =>
+                setEditingItem({ ...editingItem, title: e.target.value })
+              }
+            />
+            <input
+              className="border p-2 w-full mb-2"
+              type="number"
+              value={editingItem.price}
+              onChange={(e) =>
+                setEditingItem({
+                  ...editingItem,
+                  price: Number(e.target.value),
+                })
+              }
+            />
+            <div className="flex justify-end space-x-2">
+              <button
+                className="bg-gray-500 text-white px-4 py-2 rounded"
+                onClick={() => setEditingItem(null)}
+              >
+                Annulla
+              </button>
+              <button
+                className="bg-blue-500 text-white px-4 py-2 rounded"
+                onClick={() =>
+                  handleUpdateMenuItem(
+                    editingItem.id,
+                    editingItem.title,
+                    editingItem.price
+                  )
+                }
+              >
+                Salva
+              </button>
             </div>
-            <div>
-              {item.terminated ? (
-                <button
-                  className="text-green-500 underline"
-                  onClick={() => handleReopen(item.id)}
-                >
-                  Rendi Disponibile
-                </button>
-              ) : (
-                <button
-                  className="text-blue-500 underline"
-                  onClick={() => handleTerminate(item.id)}
-                >
-                  Termina
-                </button>
-              )}
-            </div>
-          </li>
-        ))}
-      </ul>
-      {selectedIds.length > 0 && (
-        <button
-          className="bg-red-500 text-white px-4 py-2 mt-2"
-          onClick={handleDelete}
-        >
-          Elimina Portate Selezionate
-        </button>
+          </div>
+        </div>
       )}
-      <div className="mt-4">
-        <input
-          className="border p-2 w-full mt-2"
-          placeholder="Nome portata"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
-        <input
-          className="border p-2 w-full mt-2"
-          type="number"
-          placeholder="Prezzo"
-          value={price}
-          onChange={(e) => setPrice(e.target.value)}
-        />
-        <button
-          className="bg-green-500 text-white px-4 py-2 mt-2"
-          onClick={handleAdd}
-        >
-          Aggiungi Portata
-        </button>
-      </div>
     </div>
   );
 }
