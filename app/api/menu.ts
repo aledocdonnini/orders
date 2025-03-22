@@ -6,44 +6,37 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-// Ottiene il menu di un evento
 export async function getMenu(eventId: number) {
   const { data, error } = await supabase
-    .from("menu")
+    .from("menu_items")
     .select("*")
     .eq("event_id", eventId);
   if (error) throw error;
   return data;
 }
 
-// Aggiunge una portata al menu
 export async function addMenuItem(
   eventId: number,
   title: string,
   price: number
 ) {
   const { data, error } = await supabase
-    .from("menu")
-    .insert([{ event_id: eventId, title, price }])
+    .from("menu_items")
+    .insert([{ event_id: eventId, title, price, available: true }])
     .select("*");
   if (error) throw error;
   return data[0];
 }
 
-// Elimina una portata
-export async function deleteMenuItem(itemId: number) {
-  const { error } = await supabase.from("menu").delete().eq("id", itemId);
+export async function deleteMenuItems(ids: number[]) {
+  const { error } = await supabase.from("menu_items").delete().in("id", ids);
   if (error) throw error;
 }
 
-// Imposta una portata come terminata/non terminata
-export async function toggleMenuItemStatus(
-  itemId: number,
-  isAvailable: boolean
-) {
+export async function toggleMenuItemStatus(itemId: number, available: boolean) {
   const { error } = await supabase
-    .from("menu")
-    .update({ available: isAvailable })
+    .from("menu_items")
+    .update({ available })
     .eq("id", itemId);
   if (error) throw error;
 }

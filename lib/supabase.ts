@@ -43,3 +43,20 @@ export async function deleteOrder(orderId: number) {
 
   if (error) throw new Error(error.message);
 }
+
+export async function updateOrder(
+  orderId: number,
+  customerName: string,
+  items: any[]
+) {
+  const total = items.reduce((sum, item) => sum + item.price, 0);
+  const { data, error } = await supabase
+    .from("orders")
+    .update({ customer_name: customerName, items, total })
+    .eq("id", orderId)
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
+  return data;
+}
