@@ -28,8 +28,14 @@ export default function OrderManagementView() {
             {menu.map((item) => (
               <li
                 key={item.id}
-                className="border p-2 cursor-pointer hover:bg-gray-200"
-                onClick={() => addToOrder(item)}
+                className={`border p-2 ${
+                  item.terminated
+                    ? "bg-gray-300 cursor-not-allowed"
+                    : "cursor-pointer hover:bg-gray-200"
+                }`}
+                onClick={() => {
+                  if (!item.terminated) addToOrder(item);
+                }}
               >
                 {item.title} - €{item.price.toFixed(2)}
               </li>
@@ -46,6 +52,7 @@ export default function OrderManagementView() {
           className="border p-2 w-full mb-2"
           value={customerName}
           onChange={(e) => setCustomerName(e.target.value)}
+          required={true}
         />
         {currentOrder.length === 0 ? (
           <p>Nessuna portata aggiunta</p>

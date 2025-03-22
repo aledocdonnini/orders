@@ -20,6 +20,7 @@ export interface MenuItem {
   event_id: number;
   title: string;
   price: number;
+  terminated?: boolean; // false per default
 }
 
 export interface Order {
@@ -42,6 +43,9 @@ interface OrderContextType {
   completeOrder: (customer: string) => void;
   setSelectedEvent: (event: Event | null) => void;
   fetchMenu: () => Promise<void>;
+  deleteMenuItems: (ids: number[]) => Promise<void>;
+  terminateMenuItem: (id: number) => Promise<void>;
+  reopenMenuItem: (id: number) => Promise<void>;
 }
 
 const OrderContext = createContext<OrderContextType | undefined>(undefined);
@@ -73,7 +77,7 @@ export function OrderProvider({ children }: { children: ReactNode }) {
     if (!selectedEvent) return;
     const { data } = await supabase
       .from("menu")
-      .insert([{ event_id: selectedEvent.id, title, price }])
+      .insert([{ event_id: selectedEvent.id, title, price, terminated: false }])
       .select("*");
     if (data) {
       setMenu([...menu, ...data]);
@@ -102,7 +106,6 @@ export function OrderProvider({ children }: { children: ReactNode }) {
     setCurrentOrder([]);
   }
 
-  // Funzione per recuperare il menu relativo all'evento
   async function fetchMenu() {
     if (!selectedEvent) return;
     const { data, error } = await supabase
@@ -113,6 +116,51 @@ export function OrderProvider({ children }: { children: ReactNode }) {
       console.error("Errore nel fetch del menu:", error);
     } else if (data) {
       setMenu(data);
+    }
+  }
+
+  async function deleteMenuItems(ids: number[]) {
+    const { error } = await supabase.from("menu").delete().in("id", ids);
+    if (error) {
+      console.error("Errore nell'eliminazione delle portate:", error);
+    } else {
+      setMenu(menu.filter((item) => !ids.includes(item.id)));
+    }
+  }
+
+  async function terminateMenuItem(id: number) {
+    const { data, error } = await supabase
+      .from("menu")
+      .update({ terminated: true })
+      .eq("id", id)
+      .select("*")
+      .single();
+    if (error) {
+      console.error("Errore nel terminare la portata:", error);
+    } else if (data) {
+      setMenu(
+        menu.map((item) =>
+          item.id === id ? { ...item, terminated: true } : item
+        )
+      );
+    }
+  }
+
+  async function reopenMenuItem(id: number) {
+    const { data, error } = await supabase
+      .from("menu")
+      .update({ terminated: false })
+      .eq("id", id)
+      .select("*")
+      .single();
+    if (error) {
+      console.error("Errore nel rendere disponibile la portata:", error);
+    } else if (data) {
+      setMenu(
+        menu.map((item) =>
+          item.id === id ? { ...item, terminated: false } : item
+        )
+      );
     }
   }
 
@@ -130,6 +178,9 @@ export function OrderProvider({ children }: { children: ReactNode }) {
         completeOrder,
         setSelectedEvent,
         fetchMenu,
+        deleteMenuItems,
+        terminateMenuItem,
+        reopenMenuItem,
       }}
     >
       {children}
