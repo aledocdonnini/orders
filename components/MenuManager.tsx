@@ -1,10 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
+import { useDrop, useDrag, DndProvider } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
+import { updateMenuOrder, addMenuCategory } from "@/lib/supabase";
 import {
   addMenuItem,
-  deleteMenuItems,
   toggleMenuItemStatus,
+  deleteMenuItems,
 } from "@/app/api/menu";
 import { toast } from "react-toastify";
 
@@ -14,164 +17,218 @@ interface MenuItem {
   title: string;
   price: number;
   terminated: boolean;
+  position: number; // Cambiato 'order' a 'position'
+  category?: string;
 }
 
-interface MenuManagerProps {
+interface Props {
   eventId: number;
   menu: MenuItem[];
-  mutate: () => void; // Funzione per aggiornare i dati (ad es. da SWR)
+  mutate: () => void;
 }
 
-export default function MenuManager({
-  eventId,
-  menu,
-  mutate,
-}: MenuManagerProps) {
+// Componente Drag & Drop per le portate
+const DraggableMenuItem = ({
+  item,
+  index,
+  moveItem,
+}: {
+  item: MenuItem;
+  index: number;
+  moveItem: (dragIndex: number, hoverIndex: number) => void;
+}) => {
+  const [{ isDragging }, drag] = useDrag({
+    type: "MENU_ITEM",
+    item: { index },
+    collect: (monitor) => ({
+      isDragging: monitor.isDragging(),
+    }),
+  });
+
+  const [, drop] = useDrop({
+    accept: "MENU_ITEM",
+    hover: (draggedItem: { index: number }) => {
+      if (draggedItem.index !== index) {
+        moveItem(draggedItem.index, index);
+        draggedItem.index = index;
+      }
+    },
+  });
+
+  return (
+    <div
+      ref={(node) => {
+        if (node) drag(drop(node));
+      }}
+      className={`p-2 border bg-white ${isDragging ? "opacity-50" : ""}`}
+    >
+      {item.title} - €{item.price} {item.terminated && "(Terminato)"}
+    </div>
+  );
+};
+
+export default function MenuManager({ eventId, menu, mutate }: Props) {
   const [newTitle, setNewTitle] = useState("");
   const [newPrice, setNewPrice] = useState("");
-  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [selectedItems, setSelectedItems] = useState<number[]>([]);
+  const [newCategory, setNewCategory] = useState("");
+  const [menuState, setMenuState] = useState<MenuItem[]>(menu);
 
-  // Aggiunge una nuova portata
-  async function handleAdd() {
-    if (!newTitle.trim() || !newPrice.trim()) {
-      toast.error("Inserisci nome e prezzo della portata.");
-      return;
-    }
-    try {
-      await addMenuItem(eventId, newTitle, parseFloat(newPrice));
-      toast.success("Portata aggiunta!");
-      setNewTitle("");
-      setNewPrice("");
-      mutate();
-    } catch (error: any) {
-      toast.error("Errore nell'aggiunta della portata.");
-      console.error(error);
-    }
+  // Funzione per riordinare le portate
+  const moveItem = useCallback(
+    async (dragIndex: number, hoverIndex: number) => {
+      const updatedMenu = [...menuState];
+      const draggedItem = updatedMenu.splice(dragIndex, 1)[0];
+      updatedMenu.splice(hoverIndex, 0, draggedItem);
+
+      // Aggiorna la posizione delle portate
+      const reorderedMenu = updatedMenu.map((item, idx) => ({
+        ...item,
+        position: idx + 1, // Assicurati che la posizione parta da 1 (1-based indexing)
+        event_id: item.event_id, // Assicurati che event_id venga passato
+      }));
+
+      setMenuState(reorderedMenu);
+
+      try {
+        console.log("Aggiornamento ordine:", reorderedMenu);
+        await updateMenuOrder(reorderedMenu); // Funzione aggiornata
+        mutate();
+      } catch (error) {
+        console.error("Errore aggiornamento ordine:", error);
+        toast.error("Errore nell'aggiornamento dell'ordine!");
+      }
+    },
+    [menuState, mutate]
+  );
+
+  // Aggiungi una nuova portata
+  async function handleAddMenuItem() {
+    if (!newTitle.trim() || !newPrice)
+      return toast.error("Inserisci titolo e prezzo!");
+
+    await addMenuItem(eventId, newTitle, parseFloat(newPrice));
+    setNewTitle("");
+    setNewPrice("");
+    mutate();
   }
 
-  // Gestione checkbox per eliminazione multipla
-  function handleCheckboxChange(id: number, checked: boolean) {
-    if (checked) {
-      setSelectedIds((prev) => [...prev, id]);
-    } else {
-      setSelectedIds((prev) => prev.filter((itemId) => itemId !== id));
-    }
+  // Aggiungi una categoria
+  async function handleAddCategory() {
+    if (!newCategory.trim())
+      return toast.error("Inserisci un nome per la categoria!");
+    await addMenuCategory(eventId, newCategory);
+    setNewCategory("");
+    mutate();
   }
 
-  // Eliminazione delle portate selezionate con conferma
-  async function handleDeleteSelected() {
-    if (selectedIds.length === 0) {
-      toast.error("Seleziona almeno una portata da eliminare.");
-      return;
-    }
+  // Elimina le portate selezionate
+  async function handleDeleteItems() {
+    if (selectedItems.length === 0)
+      return toast.error("Seleziona almeno una portata da eliminare!");
     if (!confirm("Sei sicuro di voler eliminare le portate selezionate?"))
       return;
-    try {
-      await deleteMenuItems(selectedIds);
-      toast.success("Portate eliminate!");
-      setSelectedIds([]);
-      mutate();
-    } catch (error: any) {
-      toast.error("Errore nell'eliminazione delle portate.");
-      console.error(error);
-    }
+    await deleteMenuItems(selectedItems);
+    setSelectedItems([]);
+    mutate();
   }
 
-  // Cambia lo stato di terminazione della portata
-  async function handleToggleStatus(
-    itemId: number,
-    currentTerminated: boolean
-  ) {
-    try {
-      await toggleMenuItemStatus(itemId, !currentTerminated);
-      toast.info(
-        !currentTerminated ? "Portata terminata." : "Portata ripristinata."
-      );
-      mutate(); // Forza il refetch dei dati
-    } catch (error: any) {
-      toast.error("Errore nell'aggiornamento dello stato della portata.");
-      console.error(error);
-    }
+  // Cambia stato "terminata" della portata
+  async function handleToggleTerminated(itemId: number, terminated: boolean) {
+    await toggleMenuItemStatus(itemId, !terminated);
+    mutate();
   }
 
   return (
-    <div className="p-4 border rounded">
-      <h2 className="text-xl font-bold mb-4">Gestione Menu</h2>
+    <DndProvider backend={HTML5Backend}>
+      <div className="space-y-4">
+        <div>
+          <h2 className="text-lg font-bold">Aggiungi Portata</h2>
+          <input
+            type="text"
+            placeholder="Titolo"
+            className="border p-2 mr-2"
+            value={newTitle}
+            onChange={(e) => setNewTitle(e.target.value)}
+          />
+          <input
+            type="number"
+            placeholder="Prezzo"
+            className="border p-2 mr-2"
+            value={newPrice}
+            onChange={(e) => setNewPrice(e.target.value)}
+          />
+          <button
+            onClick={handleAddMenuItem}
+            className="bg-blue-500 text-white px-4 py-2"
+          >
+            Aggiungi
+          </button>
+        </div>
 
-      {/* Form per aggiungere una nuova portata */}
-      <div className="flex gap-2 mb-4">
-        <input
-          type="text"
-          placeholder="Nome portata"
-          className="border p-2 flex-1"
-          value={newTitle}
-          onChange={(e) => setNewTitle(e.target.value)}
-        />
-        <input
-          type="number"
-          placeholder="Prezzo"
-          className="border p-2 w-24"
-          value={newPrice}
-          onChange={(e) => setNewPrice(e.target.value)}
-        />
-        <button
-          className="bg-green-500 text-white px-4 py-2"
-          onClick={handleAdd}
-        >
-          Aggiungi
-        </button>
-      </div>
+        <div>
+          <h2 className="text-lg font-bold">Aggiungi Categoria</h2>
+          <input
+            type="text"
+            placeholder="Nome categoria"
+            className="border p-2 mr-2"
+            value={newCategory}
+            onChange={(e) => setNewCategory(e.target.value)}
+          />
+          <button
+            onClick={handleAddCategory}
+            className="bg-green-500 text-white px-4 py-2"
+          >
+            Aggiungi
+          </button>
+        </div>
 
-      {/* Lista delle portate */}
-      {menu.length === 0 ? (
-        <p>Nessuna portata presente per questo evento.</p>
-      ) : (
-        <ul className="space-y-2">
-          {menu.map((item) => (
-            <li
-              key={item.id}
-              className="flex items-center justify-between border p-2"
-            >
-              <div className="flex items-center">
-                {/* Mostra checkbox solo se la portata è disponibile */}
-                {!item.terminated && (
+        <div>
+          <h2 className="text-lg font-bold">Gestisci Portate</h2>
+          {menuState.length === 0 ? (
+            <p>Nessuna portata trovata.</p>
+          ) : (
+            menuState
+              .sort((a, b) => a.position - b.position) // Ordinamento per posizione
+              .map((item, index) => (
+                <div
+                  key={item.id}
+                  className="flex items-center gap-2 border p-2"
+                >
                   <input
                     type="checkbox"
-                    className="mr-2"
-                    checked={selectedIds.includes(item.id)}
-                    onChange={(e) =>
-                      handleCheckboxChange(item.id, e.target.checked)
+                    onChange={() =>
+                      setSelectedItems((prev) =>
+                        prev.includes(item.id)
+                          ? prev.filter((id) => id !== item.id)
+                          : [...prev, item.id]
+                      )
                     }
                   />
-                )}
-                <span
-                  className={`${item.terminated ? "text-gray-500 line-through" : ""}`}
-                >
-                  {item.title} - €{item.price.toFixed(2)}
-                </span>
-              </div>
-              <div>
-                <button
-                  onClick={() => handleToggleStatus(item.id, item.terminated)}
-                  className="text-blue-500 underline"
-                >
-                  {item.terminated ? "Ripristina" : "Termina"}
-                </button>
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      {/* Bottone per eliminare portate selezionate */}
-      {selectedIds.length > 0 && (
-        <button
-          className="bg-red-500 text-white px-4 py-2 mt-4"
-          onClick={handleDeleteSelected}
-        >
-          Elimina Portate Selezionate
-        </button>
-      )}
-    </div>
+                  <DraggableMenuItem
+                    item={item}
+                    index={index}
+                    moveItem={moveItem}
+                  />
+                  <button
+                    onClick={() =>
+                      handleToggleTerminated(item.id, item.terminated)
+                    }
+                    className="text-sm px-2 py-1 bg-gray-500 text-white"
+                  >
+                    {item.terminated ? "Ripristina" : "Termina"}
+                  </button>
+                </div>
+              ))
+          )}
+          <button
+            onClick={handleDeleteItems}
+            className="bg-red-500 text-white px-4 py-2 mt-4"
+          >
+            Elimina Selezionati
+          </button>
+        </div>
+      </div>
+    </DndProvider>
   );
 }
