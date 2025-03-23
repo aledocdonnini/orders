@@ -24,6 +24,7 @@ interface MenuItem {
 interface Category {
   id: number;
   name: string;
+  position: number;
 }
 
 interface Props {
@@ -106,13 +107,52 @@ export default function MenuManager({ eventId, menu, mutate }: Props) {
     mutate();
   }
 
+  const handleCategoryOrderChange = async (reorderedCategories: Category[]) => {
+    // Aggiorna l'ordine delle categorie
+    setCategories(reorderedCategories);
+
+    // Aggiorna il groupedMenu
+    const groupedMenu = menuState.reduce(
+      (acc, item) => {
+        const category = reorderedCategories.find(
+          (c) => c.id === item.category_id
+        );
+        const categoryName = category ? category.name : "Senza categoria";
+        if (!acc[categoryName]) acc[categoryName] = [];
+        acc[categoryName].push(item);
+        return acc;
+      },
+      {} as Record<string, MenuItem[]>
+    );
+
+    // Ora groupedMenu è aggiornato con l'ordine delle categorie
+  };
+
   const groupedMenu = menuState.reduce(
     (acc, item) => {
-      const category =
-        categories.find((c) => c.id === item.category_id)?.name ||
-        "Senza categoria";
-      if (!acc[category]) acc[category] = [];
-      acc[category].push(item);
+      // Trova la categoria in base al suo id
+      const category = categories.find((c) => c.id === item.category_id);
+
+      // Se la categoria esiste e ha una posizione, usa quella posizione per il raggruppamento
+      const categoryName = category ? category.name : "Senza categoria";
+
+      if (!acc[categoryName]) acc[categoryName] = [];
+      acc[categoryName].push(item);
+      return acc;
+    },
+    {} as Record<string, MenuItem[]>
+  );
+
+  // Aggiungiamo l'ordinamento delle categorie, tenendo conto della posizione
+  const sortedCategories = categories.sort((a, b) => a.position - b.position);
+
+  // Raggruppa le portate in base all'ordine delle categorie
+  const groupedMenuWithSortedCategories = sortedCategories.reduce(
+    (acc, category) => {
+      const categoryName = category.name;
+      if (groupedMenu[categoryName]) {
+        acc[categoryName] = groupedMenu[categoryName];
+      }
       return acc;
     },
     {} as Record<string, MenuItem[]>
@@ -161,39 +201,44 @@ export default function MenuManager({ eventId, menu, mutate }: Props) {
 
         <h2 className="text-lg font-bold mt-6">Gestisci Portate</h2>
 
-        {Object.entries(groupedMenu).map(([categoryName, items]) => (
-          <div key={categoryName} className="mt-4">
-            <h3 className="text-lg font-bold bg-gray-100 p-2">
-              {categoryName}
-            </h3>
-            {items.map((item) => (
-              <div key={item.id} className="flex items-center gap-2 border p-2">
-                <input
-                  type="checkbox"
-                  onChange={() =>
-                    setSelectedItems((prev) =>
-                      prev.includes(item.id)
-                        ? prev.filter((id) => id !== item.id)
-                        : [...prev, item.id]
-                    )
-                  }
-                />
-                <div className="flex-1">
-                  {item.title} - €{item.price}{" "}
-                  {item.terminated && "(Terminato)"}
-                </div>
-                <button
-                  onClick={() =>
-                    handleToggleTerminated(item.id, item.terminated)
-                  }
-                  className="text-sm px-2 py-1 bg-gray-500 text-white"
+        {Object.entries(groupedMenuWithSortedCategories).map(
+          ([categoryName, items]) => (
+            <div key={categoryName} className="mt-4">
+              <h3 className="text-lg font-bold bg-gray-100 p-2">
+                {categoryName}
+              </h3>
+              {items.map((item) => (
+                <div
+                  key={item.id}
+                  className="flex items-center gap-2 border p-2"
                 >
-                  {item.terminated ? "Ripristina" : "Termina"}
-                </button>
-              </div>
-            ))}
-          </div>
-        ))}
+                  <input
+                    type="checkbox"
+                    onChange={() =>
+                      setSelectedItems((prev) =>
+                        prev.includes(item.id)
+                          ? prev.filter((id) => id !== item.id)
+                          : [...prev, item.id]
+                      )
+                    }
+                  />
+                  <div className="flex-1">
+                    {item.title} - €{item.price}{" "}
+                    {item.terminated && "(Terminato)"}
+                  </div>
+                  <button
+                    onClick={() =>
+                      handleToggleTerminated(item.id, item.terminated)
+                    }
+                    className="text-sm px-2 py-1 bg-gray-500 text-white"
+                  >
+                    {item.terminated ? "Ripristina" : "Termina"}
+                  </button>
+                </div>
+              ))}
+            </div>
+          )
+        )}
 
         <button
           onClick={handleDeleteItems}
@@ -215,12 +260,15 @@ export default function MenuManager({ eventId, menu, mutate }: Props) {
         />
         <button
           onClick={handleAddCategory}
-          className="bg-green-500 text-white px-4 py-2"
+          className="bg-blue-500 text-white px-4 py-2"
         >
-          Aggiungi
+          Aggiungi Categoria
         </button>
 
-        <MenuCategories eventId={eventId} />
+        <MenuCategories
+          categories={categories}
+          handleCategoryOrderChange={handleCategoryOrderChange}
+        />
       </div>
     </div>
   );

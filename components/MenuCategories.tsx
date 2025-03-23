@@ -1,47 +1,32 @@
 import { useEffect, useState } from "react";
-import {
-  getCategories,
-  deleteMenuCategories,
-  updateCategoryOrder,
-} from "@/lib/supabase"; // Funzione per eliminare categorie
+import { supabase } from "@/lib/supabase";
+import { deleteMenuCategories, updateCategoryOrder } from "@/lib/supabase";
 import { toast } from "react-toastify";
 import { useDrag, useDrop } from "react-dnd";
-import { DndProvider, useDragDropManager } from "react-dnd";
+import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 
 interface MenuCategory {
   id: number;
   name: string;
+  position: number;
 }
 
 interface Props {
-  eventId: number;
+  categories: MenuCategory[];
+  handleCategoryOrderChange: (reorderedCategories: MenuCategory[]) => void;
 }
 
 interface DragItem {
   index: number;
 }
 
-export default function MenuCategories({ eventId }: Props) {
-  const [categories, setCategories] = useState<MenuCategory[]>([]);
+export default function MenuCategories({
+  categories,
+  handleCategoryOrderChange,
+}: Props) {
   const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
 
-  // Funzione per recuperare le categorie dal database
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const categories = await getCategories(eventId);
-        setCategories(categories);
-        console.log("Categorie recuperate:", categories);
-      } catch (error) {
-        console.error("Errore nel recupero delle categorie:", error);
-      }
-    };
-
-    fetchCategories();
-  }, [eventId]);
-
-  // Funzione per gestire la selezione/deselezione delle categorie
   const toggleCategorySelection = (categoryId: number) => {
     setSelectedCategories((prev) =>
       prev.includes(categoryId)
@@ -50,7 +35,6 @@ export default function MenuCategories({ eventId }: Props) {
     );
   };
 
-  // Funzione per eliminare le categorie selezionate
   const handleDeleteCategories = async () => {
     if (selectedCategories.length === 0) {
       return toast.error("Seleziona almeno una categoria da eliminare!");
@@ -60,29 +44,22 @@ export default function MenuCategories({ eventId }: Props) {
     }
     try {
       await deleteMenuCategories(selectedCategories);
-      setCategories((prev) =>
-        prev.filter((category) => !selectedCategories.includes(category.id))
-      );
-      setSelectedCategories([]);
       toast.success("Categorie eliminate con successo!");
     } catch (error) {
       toast.error("Errore nell'eliminazione delle categorie.");
     }
   };
 
-  // Funzione per aggiornare l'ordine delle categorie nel database e nel frontend
   const handleMoveCategory = async (dragIndex: number, hoverIndex: number) => {
     const reorderedCategories = [...categories];
     const draggedCategory = reorderedCategories[dragIndex];
     reorderedCategories.splice(dragIndex, 1);
     reorderedCategories.splice(hoverIndex, 0, draggedCategory);
 
-    // Aggiorna l'ordine localmente nel frontend
-    setCategories(reorderedCategories);
+    handleCategoryOrderChange(reorderedCategories);
 
-    // Aggiungi la logica per aggiornare l'ordine nel database
     try {
-      await updateCategoryOrder(reorderedCategories); // Chiamata al backend
+      await updateCategoryOrder(reorderedCategories);
       toast.success("Ordine delle categorie aggiornato con successo.");
     } catch (error) {
       toast.error("Errore nel riorganizzare le categorie.");

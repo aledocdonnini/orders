@@ -118,7 +118,6 @@ export default function EventPage() {
       console.error(err);
     }
   }
-  console.log("Event ID passato a useCategories:", eventId);
 
   const categoryMap = categories.reduce<Record<number, string>>((acc, cat) => {
     acc[cat.id] = cat.name;

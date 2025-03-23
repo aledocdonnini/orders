@@ -167,14 +167,18 @@ export async function addMenuCategory(
 }
 
 // Funzione per ottenere le categorie dal database
-export async function getCategories(
-  eventId: number
-): Promise<{ id: number; name: string }[]> {
+export async function getCategories(eventId: number): Promise<
+  {
+    position: number;
+    id: number;
+    name: string;
+  }[]
+> {
   console.log("Fetching categories for eventId:", eventId); // Aggiungi il log qui
   try {
     const { data, error } = await supabase
       .from("menu_categories")
-      .select("id, name")
+      .select("id, name, position") // Aggiungi 'position' alla query
       .eq("event_id", eventId);
 
     if (error) {
