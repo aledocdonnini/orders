@@ -16,8 +16,18 @@ interface MenuItem {
   position: number; // Cambiato 'order' a 'position'
   category?: string;
 }
+interface OrderItem {
+  id: number;
+  title: string;
+  price: number;
+  quantity: number;
+}
 // Funzione per aggiornare una portata
-export async function updateMenuItem(id: number, title: string, price: number) {
+export async function updateMenuItem(
+  id: number,
+  title: string,
+  price: number
+): Promise<MenuItem> {
   const { data, error } = await supabase
     .from("menu")
     .update({ title, price })
@@ -26,13 +36,13 @@ export async function updateMenuItem(id: number, title: string, price: number) {
     .single();
 
   if (error) throw new Error(error.message);
-  return data;
+  return data as MenuItem; // Assicurati di restituire i dati come un MenuItem
 }
 
 export async function createOrder(
   eventId: number,
   customerName: string,
-  items: any[]
+  items: OrderItem[]
 ) {
   const total = items.reduce((sum, item) => sum + item.price, 0);
 
@@ -89,10 +99,104 @@ export async function updateMenuOrder(updatedMenu: MenuItem[]) {
   }
 }
 
-export async function addMenuCategory(eventId: number, title: string) {
-  await supabase
-    .from("menu")
-    .insert([
-      { event_id: eventId, title, price: 0, category: title, position: 0 },
-    ]);
+// Funzione per verificare se l'evento esiste
+async function checkEventExists(eventId: number): Promise<boolean> {
+  try {
+    const { data, error } = await supabase
+      .from("events")
+      .select("id")
+      .eq("id", eventId)
+      .single();
+
+    if (error) {
+      console.error("Errore nel recupero dell'evento:", error);
+      return false; // Se c'è un errore nella query, assume che l'evento non esista
+    }
+
+    return data !== null; // Se viene trovato un evento, restituisce true
+  } catch (error) {
+    console.error("Errore nel controllo dell'esistenza dell'evento:", error);
+    return false;
+  }
+}
+
+// Funzione per aggiungere una categoria
+export async function addMenuCategory(
+  eventId: number,
+  categoryName: string
+): Promise<void> {
+  // Verifica che l'evento esista
+  const eventExists = await checkEventExists(eventId);
+
+  if (!eventExists) {
+    throw new Error("L'evento con l'ID specificato non esiste.");
+  }
+
+  try {
+    const { error } = await supabase
+      .from("menu_categories")
+      .insert([{ event_id: eventId, name: categoryName }]);
+
+    if (error) throw error;
+  } catch (error: unknown) {
+    // Log dell'errore per analizzare la struttura
+    console.error("Errore nel blocco catch:", error);
+
+    if (error instanceof Error) {
+      // Se l'errore è un'istanza di Error, possiamo accedere alle sue proprietà
+      console.error("Errore nell'aggiunta della categoria:", error.message);
+      throw new Error("Impossibile aggiungere la categoria.");
+    } else if (error && typeof error === "object" && "message" in error) {
+      // Se l'errore è un oggetto e contiene una proprietà 'message', lo trattiamo come errore
+      const e = error as { message: string };
+      console.error("Errore nell'aggiunta della categoria:", e.message);
+      throw new Error("Impossibile aggiungere la categoria.");
+    } else {
+      // Gestione di errori sconosciuti
+      console.error("Errore sconosciuto nell'aggiunta della categoria:", error);
+      throw new Error(
+        "Impossibile aggiungere la categoria per un errore sconosciuto."
+      );
+    }
+  }
+}
+
+// Funzione per ottenere le categorie dal database
+export async function getCategories(
+  eventId: number
+): Promise<{ id: number; name: string }[]> {
+  console.log("Fetching categories for eventId:", eventId); // Aggiungi il log qui
+  try {
+    const { data, error } = await supabase
+      .from("menu_categories")
+      .select("id, name")
+      .eq("event_id", eventId);
+
+    if (error) {
+      console.error("Errore nel recupero delle categorie:", error);
+      throw error;
+    }
+
+    return data || []; // Assicurati che ritorni un array vuoto se non ci sono dati
+  } catch (error) {
+    console.error("Errore nel recupero delle categorie:", error);
+    throw new Error("Impossibile recuperare le categorie.");
+  }
+}
+
+// Funzione per eliminare le categorie selezionate
+export async function deleteMenuCategories(
+  categoryIds: number[]
+): Promise<void> {
+  try {
+    const { error } = await supabase
+      .from("menu_categories")
+      .delete()
+      .in("id", categoryIds);
+
+    if (error) throw error;
+  } catch (error) {
+    console.error("Errore nell'eliminazione delle categorie:", error);
+    throw new Error("Impossibile eliminare le categorie.");
+  }
 }

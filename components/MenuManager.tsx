@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useDrop, useDrag, DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { updateMenuOrder, addMenuCategory } from "@/lib/supabase";
@@ -8,8 +8,11 @@ import {
   addMenuItem,
   toggleMenuItemStatus,
   deleteMenuItems,
+  updateMenuItemCategory,
 } from "@/app/api/menu";
 import { toast } from "react-toastify";
+import { getCategories } from "@/lib/supabase"; // Importa la funzione getCategories
+import MenuCategories from "./MenuCategories";
 
 interface MenuItem {
   id: number;
@@ -17,8 +20,13 @@ interface MenuItem {
   title: string;
   price: number;
   terminated: boolean;
-  position: number; // Cambiato 'order' a 'position'
-  category?: string;
+  position: number;
+  category_id?: number; // Utilizziamo category_id per il riferimento alla categoria
+}
+
+interface Category {
+  id: number;
+  name: string;
 }
 
 interface Props {
@@ -27,7 +35,6 @@ interface Props {
   mutate: () => void;
 }
 
-// Componente Drag & Drop per le portate
 const DraggableMenuItem = ({
   item,
   index,
@@ -71,28 +78,40 @@ export default function MenuManager({ eventId, menu, mutate }: Props) {
   const [newTitle, setNewTitle] = useState("");
   const [newPrice, setNewPrice] = useState("");
   const [selectedItems, setSelectedItems] = useState<number[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [newCategory, setNewCategory] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<number | "">("");
   const [menuState, setMenuState] = useState<MenuItem[]>(menu);
 
-  // Funzione per riordinare le portate
+  // Carica le categorie
+  useEffect(() => {
+    async function fetchCategories() {
+      try {
+        const categoryList = await getCategories(eventId);
+        setCategories(categoryList);
+      } catch (error) {
+        toast.error("Errore nel recupero delle categorie.");
+      }
+    }
+    fetchCategories();
+  }, [eventId]);
+
   const moveItem = useCallback(
     async (dragIndex: number, hoverIndex: number) => {
       const updatedMenu = [...menuState];
       const draggedItem = updatedMenu.splice(dragIndex, 1)[0];
       updatedMenu.splice(hoverIndex, 0, draggedItem);
 
-      // Aggiorna la posizione delle portate
       const reorderedMenu = updatedMenu.map((item, idx) => ({
         ...item,
-        position: idx + 1, // Assicurati che la posizione parta da 1 (1-based indexing)
-        event_id: item.event_id, // Assicurati che event_id venga passato
+        position: idx + 1,
+        event_id: item.event_id,
       }));
 
       setMenuState(reorderedMenu);
 
       try {
-        console.log("Aggiornamento ordine:", reorderedMenu);
-        await updateMenuOrder(reorderedMenu); // Funzione aggiornata
+        await updateMenuOrder(reorderedMenu);
         mutate();
       } catch (error) {
         console.error("Errore aggiornamento ordine:", error);
@@ -102,27 +121,43 @@ export default function MenuManager({ eventId, menu, mutate }: Props) {
     [menuState, mutate]
   );
 
-  // Aggiungi una nuova portata
   async function handleAddMenuItem() {
-    if (!newTitle.trim() || !newPrice)
-      return toast.error("Inserisci titolo e prezzo!");
+    if (!newTitle.trim() || !newPrice || selectedCategory === "") {
+      return toast.error("Inserisci titolo, prezzo e categoria!");
+    }
 
-    await addMenuItem(eventId, newTitle, parseFloat(newPrice));
-    setNewTitle("");
-    setNewPrice("");
-    mutate();
+    try {
+      // Passiamo anche la categoria nella funzione addMenuItem
+      await addMenuItem(
+        eventId,
+        newTitle,
+        parseFloat(newPrice),
+        selectedCategory
+      );
+      setNewTitle("");
+      setNewPrice("");
+      setSelectedCategory(""); // Resetta la categoria selezionata
+      mutate();
+    } catch (error) {
+      toast.error("Errore nell'aggiunta della portata.");
+    }
   }
 
-  // Aggiungi una categoria
+  // Gestione dell'aggiunta della categoria
   async function handleAddCategory() {
-    if (!newCategory.trim())
+    if (!newCategory.trim()) {
       return toast.error("Inserisci un nome per la categoria!");
-    await addMenuCategory(eventId, newCategory);
-    setNewCategory("");
-    mutate();
+    }
+
+    try {
+      await addMenuCategory(eventId, newCategory);
+      setNewCategory(""); // Pulisce il campo categoria
+      mutate(); // Ricarica i dati
+    } catch (error) {
+      toast.error("Errore nell'aggiunta della categoria");
+    }
   }
 
-  // Elimina le portate selezionate
   async function handleDeleteItems() {
     if (selectedItems.length === 0)
       return toast.error("Seleziona almeno una portata da eliminare!");
@@ -133,7 +168,6 @@ export default function MenuManager({ eventId, menu, mutate }: Props) {
     mutate();
   }
 
-  // Cambia stato "terminata" della portata
   async function handleToggleTerminated(itemId: number, terminated: boolean) {
     await toggleMenuItemStatus(itemId, !terminated);
     mutate();
@@ -141,7 +175,8 @@ export default function MenuManager({ eventId, menu, mutate }: Props) {
 
   return (
     <DndProvider backend={HTML5Backend}>
-      <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-4">
+        {/* Gestione Portate */}
         <div>
           <h2 className="text-lg font-bold">Aggiungi Portata</h2>
           <input
@@ -158,38 +193,36 @@ export default function MenuManager({ eventId, menu, mutate }: Props) {
             value={newPrice}
             onChange={(e) => setNewPrice(e.target.value)}
           />
+          <select
+            value={selectedCategory}
+            onChange={(e) =>
+              setSelectedCategory(parseInt(e.target.value) || "")
+            }
+            className="border p-2"
+          >
+            <option value="">Seleziona una categoria</option>
+            {categories
+              .sort((a, b) => a.id - b.id)
+              .map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
+          </select>
+
           <button
             onClick={handleAddMenuItem}
             className="bg-blue-500 text-white px-4 py-2"
           >
             Aggiungi
           </button>
-        </div>
 
-        <div>
-          <h2 className="text-lg font-bold">Aggiungi Categoria</h2>
-          <input
-            type="text"
-            placeholder="Nome categoria"
-            className="border p-2 mr-2"
-            value={newCategory}
-            onChange={(e) => setNewCategory(e.target.value)}
-          />
-          <button
-            onClick={handleAddCategory}
-            className="bg-green-500 text-white px-4 py-2"
-          >
-            Aggiungi
-          </button>
-        </div>
-
-        <div>
-          <h2 className="text-lg font-bold">Gestisci Portate</h2>
+          <h2 className="text-lg font-bold mt-6">Gestisci Portate</h2>
           {menuState.length === 0 ? (
             <p>Nessuna portata trovata.</p>
           ) : (
             menuState
-              .sort((a, b) => a.position - b.position) // Ordinamento per posizione
+              .sort((a, b) => a.position - b.position)
               .map((item, index) => (
                 <div
                   key={item.id}
@@ -227,6 +260,26 @@ export default function MenuManager({ eventId, menu, mutate }: Props) {
           >
             Elimina Selezionati
           </button>
+        </div>
+
+        {/* Gestione Categorie */}
+        <div>
+          <h2 className="text-lg font-bold">Aggiungi Categoria</h2>
+          <input
+            type="text"
+            placeholder="Nome categoria"
+            className="border p-2 mr-2"
+            value={newCategory}
+            onChange={(e) => setNewCategory(e.target.value)}
+          />
+          <button
+            onClick={handleAddCategory}
+            className="bg-green-500 text-white px-4 py-2"
+          >
+            Aggiungi
+          </button>
+
+          <MenuCategories eventId={eventId} />
         </div>
       </div>
     </DndProvider>
