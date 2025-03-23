@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import useSWR from "swr";
 import { supabase } from "@/lib/supabase";
 
@@ -15,5 +16,32 @@ export function useMenu(eventId: number) {
     eventId ? `menu-${eventId}` : null,
     () => fetchMenu(eventId)
   );
-  return { menu: data ?? [], error, mutate, isLoading };
+
+  useEffect(() => {
+    if (!eventId) return;
+
+    // Crea un canale realtime per ascoltare gli eventi sulla tabella menu
+    const channel = supabase
+      .channel(`menu:event_${eventId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*", // ascolta tutti gli eventi (INSERT, UPDATE, DELETE)
+          schema: "public",
+          table: "menu",
+          filter: `event_id=eq.${eventId}`,
+        },
+        (payload) => {
+          console.log("Realtime update in menu:", payload);
+          mutate(); // Forza la revalidazione dei dati quando avviene una modifica
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [eventId, mutate]);
+
+  return { menu: data ?? [], error, isLoading, mutate };
 }

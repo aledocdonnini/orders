@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import useSWR from "swr";
 import { supabase } from "@/lib/supabase";
 
@@ -16,5 +17,31 @@ export function useOrders(eventId: number) {
     eventId ? `orders-${eventId}` : null,
     () => fetchOrders(eventId)
   );
-  return { orders: data ?? [], error, mutate, isLoading };
+
+  useEffect(() => {
+    // Crea un canale realtime per ascoltare gli INSERT sulla tabella orders per questo evento
+    const channel = supabase
+      .channel(`orders:event_${eventId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "orders",
+          filter: `event_id=eq.${eventId}`,
+        },
+        (payload) => {
+          console.log("Nuovo ordine inserito:", payload);
+          // Forza la revalidazione dei dati quando c'è una modifica
+          mutate();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [eventId, mutate]);
+
+  return { orders: data ?? [], error, isLoading, mutate };
 }

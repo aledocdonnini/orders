@@ -13,13 +13,13 @@ interface MenuItem {
   event_id: number;
   title: string;
   price: number;
-  available: boolean;
+  terminated: boolean;
 }
 
 interface MenuManagerProps {
   eventId: number;
   menu: MenuItem[];
-  mutate: () => void; // Funzione per aggiornare i dati (es. da SWR)
+  mutate: () => void; // Funzione per aggiornare i dati (ad es. da SWR)
 }
 
 export default function MenuManager({
@@ -27,43 +27,45 @@ export default function MenuManager({
   menu,
   mutate,
 }: MenuManagerProps) {
-  const [title, setTitle] = useState("");
-  const [price, setPrice] = useState("");
+  const [newTitle, setNewTitle] = useState("");
+  const [newPrice, setNewPrice] = useState("");
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
   // Aggiunge una nuova portata
-  const handleAdd = async () => {
-    if (!title || !price) {
-      toast.error("Inserisci sia il nome che il prezzo della portata.");
+  async function handleAdd() {
+    if (!newTitle.trim() || !newPrice.trim()) {
+      toast.error("Inserisci nome e prezzo della portata.");
       return;
     }
     try {
-      await addMenuItem(eventId, title, parseFloat(price));
+      await addMenuItem(eventId, newTitle, parseFloat(newPrice));
       toast.success("Portata aggiunta!");
-      setTitle("");
-      setPrice("");
-      mutate(); // Aggiorna la lista
+      setNewTitle("");
+      setNewPrice("");
+      mutate();
     } catch (error: any) {
       toast.error("Errore nell'aggiunta della portata.");
       console.error(error);
     }
-  };
+  }
 
-  // Gestisce il cambio dello stato del checkbox
-  const handleCheckboxChange = (id: number, checked: boolean) => {
+  // Gestione checkbox per eliminazione multipla
+  function handleCheckboxChange(id: number, checked: boolean) {
     if (checked) {
-      setSelectedIds([...selectedIds, id]);
+      setSelectedIds((prev) => [...prev, id]);
     } else {
-      setSelectedIds(selectedIds.filter((selectedId) => selectedId !== id));
+      setSelectedIds((prev) => prev.filter((itemId) => itemId !== id));
     }
-  };
+  }
 
-  // Elimina le portate selezionate
-  const handleDeleteSelected = async () => {
+  // Eliminazione delle portate selezionate con conferma
+  async function handleDeleteSelected() {
     if (selectedIds.length === 0) {
       toast.error("Seleziona almeno una portata da eliminare.");
       return;
     }
+    if (!confirm("Sei sicuro di voler eliminare le portate selezionate?"))
+      return;
     try {
       await deleteMenuItems(selectedIds);
       toast.success("Portate eliminate!");
@@ -73,41 +75,44 @@ export default function MenuManager({
       toast.error("Errore nell'eliminazione delle portate.");
       console.error(error);
     }
-  };
+  }
 
-  // Cambia lo stato di disponibilità della portata
-  const handleToggleStatus = async (id: number, available: boolean) => {
+  // Cambia lo stato di terminazione della portata
+  async function handleToggleStatus(
+    itemId: number,
+    currentTerminated: boolean
+  ) {
     try {
-      await toggleMenuItemStatus(id, !available);
+      await toggleMenuItemStatus(itemId, !currentTerminated);
       toast.info(
-        !available ? "Portata resa disponibile." : "Portata terminata."
+        !currentTerminated ? "Portata terminata." : "Portata ripristinata."
       );
-      mutate();
+      mutate(); // Forza il refetch dei dati
     } catch (error: any) {
-      toast.error("Errore nell'aggiornamento della portata.");
+      toast.error("Errore nell'aggiornamento dello stato della portata.");
       console.error(error);
     }
-  };
+  }
 
   return (
     <div className="p-4 border rounded">
-      <h2 className="text-xl font-bold">Gestione Menu</h2>
+      <h2 className="text-xl font-bold mb-4">Gestione Menu</h2>
 
-      {/* Form per aggiungere portata */}
+      {/* Form per aggiungere una nuova portata */}
       <div className="flex gap-2 mb-4">
         <input
           type="text"
           placeholder="Nome portata"
           className="border p-2 flex-1"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
+          value={newTitle}
+          onChange={(e) => setNewTitle(e.target.value)}
         />
         <input
           type="number"
           placeholder="Prezzo"
           className="border p-2 w-24"
-          value={price}
-          onChange={(e) => setPrice(e.target.value)}
+          value={newPrice}
+          onChange={(e) => setNewPrice(e.target.value)}
         />
         <button
           className="bg-green-500 text-white px-4 py-2"
@@ -128,7 +133,8 @@ export default function MenuManager({
               className="flex items-center justify-between border p-2"
             >
               <div className="flex items-center">
-                {item.available && (
+                {/* Mostra checkbox solo se la portata è disponibile */}
+                {!item.terminated && (
                   <input
                     type="checkbox"
                     className="mr-2"
@@ -138,16 +144,18 @@ export default function MenuManager({
                     }
                   />
                 )}
-                <span className={`${!item.available ? "text-gray-500" : ""}`}>
+                <span
+                  className={`${item.terminated ? "text-gray-500 line-through" : ""}`}
+                >
                   {item.title} - €{item.price.toFixed(2)}
                 </span>
               </div>
               <div>
                 <button
-                  onClick={() => handleToggleStatus(item.id, item.available)}
+                  onClick={() => handleToggleStatus(item.id, item.terminated)}
                   className="text-blue-500 underline"
                 >
-                  {item.available ? "Termina" : "Ripristina"}
+                  {item.terminated ? "Ripristina" : "Termina"}
                 </button>
               </div>
             </li>
@@ -155,6 +163,7 @@ export default function MenuManager({
         </ul>
       )}
 
+      {/* Bottone per eliminare portate selezionate */}
       {selectedIds.length > 0 && (
         <button
           className="bg-red-500 text-white px-4 py-2 mt-4"

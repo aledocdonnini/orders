@@ -6,6 +6,7 @@ import { useOrders } from "@/hooks/useOrders";
 import { createOrder, updateOrder } from "@/lib/supabase";
 import { useParams } from "next/navigation";
 import { toast } from "react-toastify";
+import MenuManager from "@/components/MenuManager";
 
 interface Order {
   id: number;
@@ -134,15 +135,7 @@ export default function EventPage() {
       {activeTab === "menu" && (
         <div>
           <h2 className="text-xl font-bold mb-2">Portate disponibili</h2>
-          {menu.length === 0 ? (
-            <p>Nessuna portata trovata per questo evento.</p>
-          ) : (
-            menu.map((item) => (
-              <div key={item.id} className="border p-2 mb-2">
-                {item.title} - €{item.price}
-              </div>
-            ))
-          )}
+          <MenuManager eventId={eventId} menu={menu} mutate={mutateOrders} />
         </div>
       )}
 
@@ -159,14 +152,15 @@ export default function EventPage() {
             />
             {menu.map((item) => (
               <div key={item.id} className="flex items-center gap-2 mb-1">
-                <input
-                  type="checkbox"
-                  checked={selectedItems.some((i) => i.id === item.id)}
-                  onChange={() => toggleItemSelection(item)}
-                />
-                <span>
+                <label className={item.terminated ? "opacity-45" : ""}>
+                  <input
+                    type="checkbox"
+                    checked={selectedItems.some((i) => i.id === item.id)}
+                    onChange={() => toggleItemSelection(item)}
+                    disabled={item.terminated}
+                  />
                   {item.title} - €{item.price}
-                </span>
+                </label>
               </div>
             ))}
             {orderError && <p className="text-red-500">{orderError}</p>}
@@ -212,7 +206,7 @@ export default function EventPage() {
       {/* Modal per la modifica dell'ordine */}
       {editingOrder && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white p-6 rounded w-96">
+          <div className="bg-gray-800 p-6 rounded w-96">
             <h2 className="text-xl font-bold mb-4">
               Modifica Ordine #{editingOrder.id}
             </h2>
@@ -226,15 +220,15 @@ export default function EventPage() {
             <h3 className="font-bold mb-2">Seleziona Portate</h3>
             {menu.map((item) => (
               <div key={item.id} className="flex items-center gap-2 mb-1">
-                <input
-                  type="checkbox"
-                  checked={editingItems.some((i) => i.id === item.id)}
-                  onChange={() => toggleEditingItem(item)}
-                />
-                z
-                <span>
+                <label className={item.terminated ? "opacity-45" : ""}>
+                  <input
+                    type="checkbox"
+                    checked={editingItems.some((i) => i.id === item.id)}
+                    onChange={() => toggleEditingItem(item)}
+                    disabled={item.terminated}
+                  />
                   {item.title} - €{item.price}
-                </span>
+                </label>
               </div>
             ))}
             <div className="flex justify-end gap-2 mt-4">
