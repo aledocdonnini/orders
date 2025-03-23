@@ -22,6 +22,11 @@ interface OrderItem {
   price: number;
   quantity: number;
 }
+interface MenuCategory {
+  id: number;
+  name: string;
+}
+
 // Funzione per aggiornare una portata
 export async function updateMenuItem(
   id: number,
@@ -200,3 +205,33 @@ export async function deleteMenuCategories(
     throw new Error("Impossibile eliminare le categorie.");
   }
 }
+
+// Funzione per aggiornare l'ordine delle categorie nel database
+export const updateCategoryOrder = async (categories: MenuCategory[]) => {
+  try {
+    // Mappa su ciascuna categoria per creare una lista di promesse di aggiornamento
+    const updatePromises = categories.map((category, index) => {
+      return supabase
+        .from("menu_categories")
+        .update({ position: index + 1 }) // Posizione basata sull'indice
+        .eq("id", category.id); // Condizione per aggiornare la categoria
+    });
+
+    // Esegui tutte le promesse in parallelo
+    const results = await Promise.all(updatePromises);
+
+    // Log per monitorare i risultati
+    console.log("Risultati dell'aggiornamento:", results);
+
+    // Verifica se ci sono errori
+    if (results.some((result) => result.error)) {
+      throw new Error("Errore nell'aggiornamento dell'ordine delle categorie.");
+    }
+
+    // Se tutto va bene, restituisci i risultati
+    return results;
+  } catch (error) {
+    console.error("Errore nell'aggiornamento delle categorie:", error);
+    throw error; // Rilancia l'errore
+  }
+};
