@@ -173,6 +173,18 @@ export default function MenuManager({ eventId, menu, mutate }: Props) {
     mutate();
   }
 
+  const groupedMenu = menuState.reduce(
+    (acc, item) => {
+      const category =
+        categories.find((c) => c.id === item.category_id)?.name ||
+        "Senza categoria";
+      if (!acc[category]) acc[category] = [];
+      acc[category].push(item);
+      return acc;
+    },
+    {} as Record<string, MenuItem[]>
+  );
+
   return (
     <DndProvider backend={HTML5Backend}>
       <div className="grid grid-cols-2 gap-4">
@@ -218,12 +230,13 @@ export default function MenuManager({ eventId, menu, mutate }: Props) {
           </button>
 
           <h2 className="text-lg font-bold mt-6">Gestisci Portate</h2>
-          {menuState.length === 0 ? (
-            <p>Nessuna portata trovata.</p>
-          ) : (
-            menuState
-              .sort((a, b) => a.position - b.position)
-              .map((item, index) => (
+
+          {Object.entries(groupedMenu).map(([categoryName, items]) => (
+            <div key={categoryName} className="mt-4">
+              <h3 className="text-lg font-bold bg-gray-100 p-2">
+                {categoryName}
+              </h3>
+              {items.map((item, index) => (
                 <div
                   key={item.id}
                   className="flex items-center gap-2 border p-2"
@@ -252,8 +265,10 @@ export default function MenuManager({ eventId, menu, mutate }: Props) {
                     {item.terminated ? "Ripristina" : "Termina"}
                   </button>
                 </div>
-              ))
-          )}
+              ))}
+            </div>
+          ))}
+
           <button
             onClick={handleDeleteItems}
             className="bg-red-500 text-white px-4 py-2 mt-4"

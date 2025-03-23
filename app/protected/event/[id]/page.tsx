@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useMenu } from "@/hooks/useMenu";
 import { useOrders } from "@/hooks/useOrders";
+import { useCategories } from "@/hooks/useCategories";
 import { createOrder, updateOrder } from "@/lib/supabase";
 import { useParams } from "next/navigation";
 import { toast } from "react-toastify";
@@ -25,6 +26,12 @@ export default function EventPage() {
     error: errorOrders,
     mutate: mutateOrders,
   } = useOrders(eventId);
+
+  const {
+    categories,
+    isLoading: loadingCategories,
+    error: errorCategories,
+  } = useCategories(eventId);
 
   const [activeTab, setActiveTab] = useState<"menu" | "orders">("menu");
   const [customerName, setCustomerName] = useState("");
@@ -111,6 +118,18 @@ export default function EventPage() {
       console.error(err);
     }
   }
+  console.log("Event ID passato a useCategories:", eventId);
+
+  const categoryMap = categories.reduce<Record<number, string>>((acc, cat) => {
+    acc[cat.id] = cat.name;
+    return acc;
+  }, {});
+  const groupedMenu = menu.reduce<Record<string, any[]>>((acc, item) => {
+    const categoryName = categoryMap[item.category_id] || "Senza categoria";
+    if (!acc[categoryName]) acc[categoryName] = [];
+    acc[categoryName].push(item);
+    return acc;
+  }, {});
 
   return (
     <div className="p-4">
@@ -154,19 +173,26 @@ export default function EventPage() {
             {menu.length === 0 ? (
               <p>Nessuna portata trovata.</p>
             ) : (
-              menu.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => handleAddToCart(item)}
-                  disabled={item.terminated}
-                  className={`block w-full px-4 py-2 mb-2 ${
-                    item.terminated
-                      ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-green-200 hover:bg-green-300"
-                  }`}
-                >
-                  {item.title} - €{item.price}
-                </button>
+              Object.entries(groupedMenu).map(([categoryName, items]) => (
+                <div key={categoryName} className="mt-4">
+                  <h3 className="text-lg font-bold bg-gray-100 p-2">
+                    {categoryName}
+                  </h3>
+                  {items.map((item) => (
+                    <button
+                      key={item.id}
+                      onClick={() => handleAddToCart(item)}
+                      disabled={item.terminated}
+                      className={`block w-full px-4 py-2 mb-2 ${
+                        item.terminated
+                          ? "bg-gray-400 cursor-not-allowed"
+                          : "bg-green-200 hover:bg-green-300"
+                      }`}
+                    >
+                      {item.title} - €{item.price}
+                    </button>
+                  ))}
+                </div>
               ))
             )}
           </div>
