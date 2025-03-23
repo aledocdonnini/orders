@@ -28,10 +28,11 @@ export default function EventPage() {
 
   const [activeTab, setActiveTab] = useState<"menu" | "orders">("menu");
   const [customerName, setCustomerName] = useState("");
+  // Per il nuovo ordine (carrello), ora supportiamo duplicati
   const [selectedItems, setSelectedItems] = useState<any[]>([]);
   const [orderError, setOrderError] = useState("");
 
-  // Stato per la modifica di un ordine
+  // Stato per il modal di modifica ordine
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
   const [editingCustomer, setEditingCustomer] = useState("");
   const [editingItems, setEditingItems] = useState<any[]>([]);
@@ -42,14 +43,14 @@ export default function EventPage() {
   if (errorOrders)
     return <p>Errore nel caricamento degli ordini: {errorOrders.message}</p>;
 
-  // Funzione per aggiungere o rimuovere una portata dall'ordine in creazione
-  function toggleItemSelection(item: any) {
-    setSelectedItems((prev) =>
-      prev.some((i) => i.id === item.id)
-        ? prev.filter((i) => i.id !== item.id)
-        : [...prev, item]
-    );
+  // Aggiunge una portata al carrello (può essere lo stesso item più volte)
+  function handleAddToCart(item: any) {
+    if (item.terminated) return; // non aggiungere se terminata
+    setSelectedItems((prev) => [...prev, item]);
   }
+
+  // Calcola il totale dell'ordine corrente
+  const total = selectedItems.reduce((sum, item) => sum + item.price, 0);
 
   // Funzione per creare un nuovo ordine
   async function handleCreateOrder() {
@@ -74,14 +75,14 @@ export default function EventPage() {
     }
   }
 
-  // Funzione per aprire il modal di modifica per un ordine
+  // Apertura del modal di modifica per un ordine
   function openEditModal(order: Order) {
     setEditingOrder(order);
     setEditingCustomer(order.customer_name);
     setEditingItems(order.items);
   }
 
-  // Funzione per gestire la modifica degli elementi dell'ordine in modifica
+  // Modifica delle portate nell'ordine in modifica (toggle per ogni portata)
   function toggleEditingItem(item: any) {
     setEditingItems((prev) =>
       prev.some((i) => i.id === item.id)
@@ -90,7 +91,7 @@ export default function EventPage() {
     );
   }
 
-  // Funzione per salvare le modifiche ad un ordine
+  // Salva le modifiche ad un ordine
   async function handleUpdateOrder() {
     if (!editingCustomer.trim()) {
       toast.error("Inserisci il nome del cliente!");
@@ -119,13 +120,17 @@ export default function EventPage() {
       <div className="flex gap-4 border-b mb-4">
         <button
           onClick={() => setActiveTab("menu")}
-          className={`p-2 ${activeTab === "menu" ? "border-b-2 border-blue-500" : ""}`}
+          className={`p-2 ${
+            activeTab === "menu" ? "border-b-2 border-blue-500" : ""
+          }`}
         >
           Menu
         </button>
         <button
           onClick={() => setActiveTab("orders")}
-          className={`p-2 ${activeTab === "orders" ? "border-b-2 border-blue-500" : ""}`}
+          className={`p-2 ${
+            activeTab === "orders" ? "border-b-2 border-blue-500" : ""
+          }`}
         >
           Ordini
         </button>
@@ -134,70 +139,96 @@ export default function EventPage() {
       {/* Tab Menu */}
       {activeTab === "menu" && (
         <div>
-          <h2 className="text-xl font-bold mb-2">Portate disponibili</h2>
+          <h2 className="text-xl font-bold mb-2">Gestione Menu</h2>
           <MenuManager eventId={eventId} menu={menu} mutate={mutateOrders} />
         </div>
       )}
 
       {/* Tab Ordini */}
       {activeTab === "orders" && (
-        <div className="grid grid-cols-2 gap-5">
+        <div className="grid grid-cols-3 gap-5">
+          {/* Colonna 1: Portate Disponibili */}
           <div>
-            <h2 className="text-xl font-bold mb-2">Nuovo Ordine</h2>
+            <h2 className="text-xl font-bold mb-2"> Portate Disponibili </h2>
+
+            {menu.length === 0 ? (
+              <p>Nessuna portata trovata.</p>
+            ) : (
+              menu.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => handleAddToCart(item)}
+                  disabled={item.terminated}
+                  className={`block w-full px-4 py-2 mb-2 ${
+                    item.terminated
+                      ? "bg-gray-400 cursor-not-allowed"
+                      : "bg-green-200 hover:bg-green-300"
+                  }`}
+                >
+                  {item.title} - €{item.price}
+                </button>
+              ))
+            )}
+          </div>
+
+          {/* Colonna 2: Carrello (portate selezionate) */}
+          <div>
+            <h2 className="text-xl font-bold mb-2">Carrello</h2>
             <input
               className="border p-2 w-full mb-2"
               placeholder="Nome Cliente"
               value={customerName}
               onChange={(e) => setCustomerName(e.target.value)}
             />
-            {menu.map((item) => (
-              <div key={item.id} className="flex items-center gap-2 mb-1">
-                <label className={item.terminated ? "opacity-45" : ""}>
-                  <input
-                    type="checkbox"
-                    checked={selectedItems.some((i) => i.id === item.id)}
-                    onChange={() => toggleItemSelection(item)}
-                    disabled={item.terminated}
-                  />
+            {selectedItems.length === 0 ? (
+              <p>Carrello vuoto.</p>
+            ) : (
+              selectedItems.map((item, index) => (
+                <div key={index} className="border p-2 mb-1">
                   {item.title} - €{item.price}
-                </label>
-              </div>
-            ))}
-            {orderError && <p className="text-red-500">{orderError}</p>}
+                </div>
+              ))
+            )}
+            <div className="mt-4 font-bold">Totale: €{total.toFixed(2)}</div>
             <button
               onClick={handleCreateOrder}
-              className="bg-blue-500 text-white px-4 py-2 mt-2"
+              className="bg-blue-500 text-white px-4 py-2 mt-2 w-full"
             >
               Crea Ordine
             </button>
+            {orderError && <p className="text-red-500 mt-2">{orderError}</p>}
           </div>
+
+          {/* Colonna 3: Ordini Effettuati */}
           <div>
-            <h2 className="text-xl font-bold mt-6 mb-2">Ordini Effettuati</h2>
+            <h2 className="text-xl font-bold mb-2">Ordini Effettuati</h2>
             {orders.length === 0 ? (
               <p>Nessun ordine effettuato.</p>
             ) : (
-              orders.map((order) => (
-                <div
-                  key={order.id}
-                  className="border p-2 mb-2 flex justify-between items-center"
-                >
-                  <div>
-                    <p>
-                      <strong>Ordine #{order.id}</strong> -{" "}
-                      {order.customer_name}
-                    </p>
-                    <p className="text-gray-500">
-                      Totale: €{order.total.toFixed(2)}
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => openEditModal(order)}
-                    className="bg-yellow-500 text-white px-2 py-1 rounded"
+              orders
+                .sort((a, b) => b.id - a.id)
+                .map((order) => (
+                  <div
+                    key={order.id}
+                    className="border p-2 mb-2 flex justify-between items-center"
                   >
-                    Modifica
-                  </button>
-                </div>
-              ))
+                    <div>
+                      <p>
+                        <strong>Ordine #{order.id}</strong> -{" "}
+                        {order.customer_name}
+                      </p>
+                      <p className="text-gray-500">
+                        Totale: €{order.total.toFixed(2)}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => openEditModal(order)}
+                      className="bg-yellow-500 text-white px-2 py-1 rounded"
+                    >
+                      Modifica
+                    </button>
+                  </div>
+                ))
             )}
           </div>
         </div>
