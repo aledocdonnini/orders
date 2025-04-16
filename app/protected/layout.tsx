@@ -47,9 +47,7 @@ export default function RootLayout({
                   </div>
                 </div>
               </nav>
-              <div className=" flex flex-col gap-20 max-w-5xl p-5">
-                {children}
-              </div>
+              <div className="container">{children}</div>
               <ToastContainer position="top-right" autoClose={3000} />
 
               <footer className="w-full flex items-center justify-center border-t mx-auto text-center text-xs gap-8 py-16">

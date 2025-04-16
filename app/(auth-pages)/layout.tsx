@@ -4,6 +4,12 @@ export default async function Layout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="max-w-7xl flex flex-col gap-12 items-start">{children}</div>
+    <html lang="en" suppressHydrationWarning>
+      <body className="bg-background text-foreground">
+        <div className="max-w-7xl flex flex-col gap-12 items-start">
+          {children}
+        </div>
+      </body>
+    </html>
   );
 }

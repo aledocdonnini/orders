@@ -13,7 +13,7 @@ interface MenuItem {
   title: string;
   price: number;
   terminated: boolean;
-  position: number; // Cambiato 'order' a 'position'
+  position: number;
   category?: string;
 }
 interface OrderItem {
@@ -25,6 +25,36 @@ interface OrderItem {
 interface MenuCategory {
   id: number;
   name: string;
+  position: number;
+}
+
+interface CategoryOrder {
+  id: number;
+  position: number;
+  event_id: number;
+}
+
+// Ottiene tutti gli eventi
+export async function getEvents() {
+  const { data, error } = await supabase.from("events").select("*");
+  if (error) throw error;
+  return data;
+}
+
+// Crea un nuovo evento
+export async function createEvent(title: string, date: string) {
+  const { data, error } = await supabase
+    .from("events")
+    .insert([{ title, date }])
+    .select("*");
+  if (error) throw error;
+  return data[0];
+}
+
+// Elimina un evento
+export async function deleteEvent(id: number) {
+  const { error } = await supabase.from("events").delete().eq("id", id);
+  if (error) throw error;
 }
 
 // Funzione per aggiornare una portata
@@ -84,22 +114,25 @@ export async function updateOrder(
   return data;
 }
 
-export async function updateMenuOrder(updatedMenu: MenuItem[]) {
-  const updates = updatedMenu.map((item) => ({
-    id: item.id,
-    position: item.position,
-    event_id: item.event_id, // Assicurati che event_id venga passato
+export async function updateMenuOrder(updatedCategories: CategoryOrder[]) {
+  const updates = updatedCategories.map((category) => ({
+    id: category.id,
+    position: category.position,
+    event_id: category.event_id, // Assicurati che event_id venga passato
   }));
 
   try {
     const { error } = await supabase
-      .from("menu")
+      .from("menu_categories") // Supponendo che la tabella per le categorie sia "menu_categories"
       .upsert(updates, { onConflict: "id" });
 
     if (error) throw error;
-    console.log("Ordine aggiornato con successo!");
+    console.log("Ordine delle categorie aggiornato con successo!");
   } catch (error) {
-    console.error("Errore nell'aggiornamento dell'ordine:", error);
+    console.error(
+      "Errore nell'aggiornamento dell'ordine delle categorie:",
+      error
+    );
     throw error;
   }
 }
@@ -123,6 +156,33 @@ async function checkEventExists(eventId: number): Promise<boolean> {
     console.error("Errore nel controllo dell'esistenza dell'evento:", error);
     return false;
   }
+}
+
+export const fetchMenuCategories = async () => {
+  try {
+    const { data, error } = await supabase
+      .from("menu_categories")
+      .select("*")
+      .order("position", { ascending: true });
+
+    if (error) {
+      throw error;
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Errore nel recupero delle categorie:", error);
+    return [];
+  }
+};
+
+export async function getMenuCategories() {
+  const { data, error } = await supabase
+    .from("menu_categories")
+    .select("*")
+    .order("position");
+  if (error) throw error;
+  return data;
 }
 
 // Funzione per aggiungere una categoria
@@ -213,29 +273,34 @@ export async function deleteMenuCategories(
 // Funzione per aggiornare l'ordine delle categorie nel database
 export const updateCategoryOrder = async (categories: MenuCategory[]) => {
   try {
-    // Mappa su ciascuna categoria per creare una lista di promesse di aggiornamento
-    const updatePromises = categories.map((category, index) => {
-      return supabase
+    const updatePromises = categories.map((category) =>
+      supabase
         .from("menu_categories")
-        .update({ position: index + 1 }) // Posizione basata sull'indice
-        .eq("id", category.id); // Condizione per aggiornare la categoria
-    });
+        .update({ position: category.position }) // Usa la posizione aggiornata
+        .eq("id", category.id)
+    );
 
-    // Esegui tutte le promesse in parallelo
     const results = await Promise.all(updatePromises);
 
-    // Log per monitorare i risultati
-    console.log("Risultati dell'aggiornamento:", results);
+    // Verifica se ci sono errori in uno qualsiasi degli aggiornamenti
+    const hasErrors = results.some((result) => result.error);
 
-    // Verifica se ci sono errori
-    if (results.some((result) => result.error)) {
-      throw new Error("Errore nell'aggiornamento dell'ordine delle categorie.");
+    if (hasErrors) {
+      results.forEach((result, index) => {
+        if (result.error) {
+          console.error(
+            `Errore nell'aggiornamento della categoria ${categories[index].id}:`,
+            result.error
+          );
+        }
+      });
+      throw new Error("Errore nell'aggiornamento di una o più categorie.");
     }
 
-    // Se tutto va bene, restituisci i risultati
+    console.log("Aggiornamento riuscito per tutte le categorie:", results);
     return results;
   } catch (error) {
-    console.error("Errore nell'aggiornamento delle categorie:", error);
-    throw error; // Rilancia l'errore
+    console.error("Errore globale nell'aggiornamento delle categorie:", error);
+    throw error;
   }
 };

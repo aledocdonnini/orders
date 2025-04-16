@@ -2,22 +2,24 @@
 
 import { useRouter } from "next/navigation";
 
-// Definizione del tipo per un evento
 interface Event {
   id: number;
   title: string;
   date: string;
 }
 
-// Definizione del tipo per le props del componente
 interface EventListProps {
   events: Event[];
+  selectedEvent: Event | null;
   setSelectedEvent: (event: Event | null) => void;
+  onDelete: (id: number) => void;
 }
 
 export default function EventList({
   events,
+  selectedEvent,
   setSelectedEvent,
+  onDelete,
 }: EventListProps) {
   const router = useRouter();
 
@@ -34,10 +36,20 @@ export default function EventList({
         {events.map((event) => (
           <li
             key={event.id}
-            className="border p-2 cursor-pointer hover:bg-gray-200"
-            onClick={() => handleEventClick(event)}
+            className="flex justify-between items-center border p-2 hover:bg-gray-100"
           >
-            {event.title} - {event.date}
+            <span
+              className="cursor-pointer flex-1"
+              onClick={() => handleEventClick(event)}
+            >
+              {event.title} - {event.date}
+            </span>
+            <button
+              onClick={() => onDelete(event.id)}
+              className="ml-4 text-sm text-red-500 hover:underline"
+            >
+              Elimina
+            </button>
           </li>
         ))}
       </ul>

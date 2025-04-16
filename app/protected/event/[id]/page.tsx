@@ -158,6 +158,7 @@ export default function EventPage() {
       {activeTab === "menu" && (
         <div>
           <h2 className="text-xl font-bold mb-2">Gestione Menu</h2>
+
           <MenuManager eventId={eventId} menu={menu} mutate={mutateOrders} />
         </div>
       )}

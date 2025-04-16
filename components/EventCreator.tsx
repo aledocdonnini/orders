@@ -1,21 +1,33 @@
 "use client";
 
 import { useState } from "react";
-import { useOrderContext } from "@/context/OrderContext";
 
-// Definizione delle props del componente (anche se non strettamente necessaria qui)
-interface EventCreatorProps {}
+interface EventCreatorProps {
+  onEventCreated: (title: string, date: string) => void;
+}
 
-export default function EventCreator({}: EventCreatorProps) {
-  const { addEvent } = useOrderContext();
+export default function EventCreator({ onEventCreated }: EventCreatorProps) {
   const [title, setTitle] = useState("");
   const [date, setDate] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!title || !date) return;
-    addEvent(title, date);
-    setTitle("");
-    setDate("");
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      await onEventCreated(title, date);
+      setTitle("");
+      setDate("");
+    } catch (err: any) {
+      console.error("Errore nella creazione dell'evento:", err);
+      setError("Errore nella creazione dell'evento.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -34,11 +46,14 @@ export default function EventCreator({}: EventCreatorProps) {
         onChange={(e) => setDate(e.target.value)}
       />
       <button
-        className="bg-blue-500 text-white px-4 py-2 mt-2"
+        className="bg-blue-500 text-white px-4 py-2 mt-2 disabled:opacity-50"
         onClick={handleSubmit}
+        disabled={loading}
       >
-        Aggiungi Evento
+        {loading ? "Creazione in corso..." : "Aggiungi Evento"}
       </button>
+
+      {error && <p className="text-red-600 mt-2">{error}</p>}
     </div>
   );
 }

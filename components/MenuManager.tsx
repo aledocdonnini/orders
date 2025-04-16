@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { updateMenuOrder, addMenuCategory } from "@/lib/supabase";
 import {
   addMenuItem,
@@ -18,7 +18,7 @@ interface MenuItem {
   price: number;
   terminated: boolean;
   position: number;
-  category_id?: number; // Utilizziamo category_id per il riferimento alla categoria
+  category_id?: number;
 }
 
 interface Category {
@@ -42,16 +42,17 @@ export default function MenuManager({ eventId, menu, mutate }: Props) {
   const [selectedCategory, setSelectedCategory] = useState<number | "">("");
   const [menuState, setMenuState] = useState<MenuItem[]>(menu);
 
+  // Funzione per caricare le categorie
+  const fetchCategories = async () => {
+    try {
+      const categoryList = await getCategories(eventId);
+      setCategories(categoryList);
+    } catch (error) {
+      toast.error("Errore nel recupero delle categorie.");
+    }
+  };
   // Carica le categorie
   useEffect(() => {
-    async function fetchCategories() {
-      try {
-        const categoryList = await getCategories(eventId);
-        setCategories(categoryList);
-      } catch (error) {
-        toast.error("Errore nel recupero delle categorie.");
-      }
-    }
     fetchCategories();
   }, [eventId]);
 
@@ -61,7 +62,6 @@ export default function MenuManager({ eventId, menu, mutate }: Props) {
     }
 
     try {
-      // Passiamo anche la categoria nella funzione addMenuItem
       await addMenuItem(
         eventId,
         newTitle,
@@ -77,7 +77,6 @@ export default function MenuManager({ eventId, menu, mutate }: Props) {
     }
   }
 
-  // Gestione dell'aggiunta della categoria
   async function handleAddCategory() {
     if (!newCategory.trim()) {
       return toast.error("Inserisci un nome per la categoria!");
@@ -86,7 +85,7 @@ export default function MenuManager({ eventId, menu, mutate }: Props) {
     try {
       await addMenuCategory(eventId, newCategory);
       setNewCategory(""); // Pulisce il campo categoria
-      mutate(); // Ricarica i dati
+      await fetchCategories(); // 🔄 Ricarica la lista delle categorie
     } catch (error) {
       toast.error("Errore nell'aggiunta della categoria");
     }
@@ -106,27 +105,6 @@ export default function MenuManager({ eventId, menu, mutate }: Props) {
     await toggleMenuItemStatus(itemId, !terminated);
     mutate();
   }
-
-  const handleCategoryOrderChange = async (reorderedCategories: Category[]) => {
-    // Aggiorna l'ordine delle categorie
-    setCategories(reorderedCategories);
-
-    // Aggiorna il groupedMenu
-    const groupedMenu = menuState.reduce(
-      (acc, item) => {
-        const category = reorderedCategories.find(
-          (c) => c.id === item.category_id
-        );
-        const categoryName = category ? category.name : "Senza categoria";
-        if (!acc[categoryName]) acc[categoryName] = [];
-        acc[categoryName].push(item);
-        return acc;
-      },
-      {} as Record<string, MenuItem[]>
-    );
-
-    // Ora groupedMenu è aggiornato con l'ordine delle categorie
-  };
 
   const groupedMenu = menuState.reduce(
     (acc, item) => {
@@ -159,10 +137,30 @@ export default function MenuManager({ eventId, menu, mutate }: Props) {
   );
 
   return (
-    <div className="grid grid-cols-2 gap-4">
+    <div>
+      <div className="flex gap-x-5">
+        <div className="mb-4">
+          <label className="block mb-1 font-semibold">Nuova categoria:</label>
+          <input
+            type="text"
+            placeholder="Nome categoria"
+            value={newCategory}
+            onChange={(e) => setNewCategory(e.target.value)}
+            className="border p-2 w-full mb-2"
+          />
+          <button
+            onClick={handleAddCategory}
+            className="bg-blue-500 text-white px-4 py-2 "
+          >
+            Aggiungi Categoria
+          </button>
+        </div>
+
+        <MenuCategories categories={categories} setCategories={setCategories} />
+      </div>
       {/* Gestione Portate */}
-      <div>
-        <h2 className="text-lg font-bold">Aggiungi Portata</h2>
+      <h2 className="text-lg font-bold">Aggiungi Portata</h2>
+      <div className="flex gap-x-4">
         <input
           type="text"
           placeholder="Titolo"
@@ -180,95 +178,76 @@ export default function MenuManager({ eventId, menu, mutate }: Props) {
         <select
           value={selectedCategory}
           onChange={(e) => setSelectedCategory(parseInt(e.target.value) || "")}
-          className="border p-2"
+          className="border p-2 min-w-48"
         >
-          <option value="">Seleziona una categoria</option>
+          <option value="">Categoria</option>
           {categories
-            .sort((a, b) => a.id - b.id)
+            .sort((a, b) => a.position - b.position)
             .map((category) => (
               <option key={category.id} value={category.id}>
                 {category.name}
               </option>
             ))}
         </select>
-
-        <button
-          onClick={handleAddMenuItem}
-          className="bg-blue-500 text-white px-4 py-2"
-        >
-          Aggiungi
-        </button>
-
-        <h2 className="text-lg font-bold mt-6">Gestisci Portate</h2>
-
-        {Object.entries(groupedMenuWithSortedCategories).map(
-          ([categoryName, items]) => (
-            <div key={categoryName} className="mt-4">
-              <h3 className="text-lg font-bold bg-gray-100 p-2">
-                {categoryName}
-              </h3>
-              {items.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex items-center gap-2 border p-2"
-                >
-                  <input
-                    type="checkbox"
-                    onChange={() =>
-                      setSelectedItems((prev) =>
-                        prev.includes(item.id)
-                          ? prev.filter((id) => id !== item.id)
-                          : [...prev, item.id]
-                      )
-                    }
-                  />
-                  <div className="flex-1">
-                    {item.title} - €{item.price}{" "}
-                    {item.terminated && "(Terminato)"}
-                  </div>
-                  <button
-                    onClick={() =>
-                      handleToggleTerminated(item.id, item.terminated)
-                    }
-                    className="text-sm px-2 py-1 bg-gray-500 text-white"
-                  >
-                    {item.terminated ? "Ripristina" : "Termina"}
-                  </button>
-                </div>
-              ))}
-            </div>
-          )
-        )}
-
-        <button
-          onClick={handleDeleteItems}
-          className="bg-red-500 text-white px-4 py-2 mt-4"
-        >
-          Elimina Selezionati
-        </button>
       </div>
 
-      {/* Gestione Categorie */}
-      <div>
-        <h2 className="text-lg font-bold">Aggiungi Categoria</h2>
-        <input
-          type="text"
-          placeholder="Nome categoria"
-          className="border p-2 mr-2"
-          value={newCategory}
-          onChange={(e) => setNewCategory(e.target.value)}
-        />
-        <button
-          onClick={handleAddCategory}
-          className="bg-blue-500 text-white px-4 py-2"
-        >
-          Aggiungi Categoria
-        </button>
+      <div className="grid grid-cols-2 gap-10">
+        <div>
+          <h2 className="text-lg font-bold mt-6">Gestisci Portate</h2>
 
-        <MenuCategories
-          categories={categories}
-          handleCategoryOrderChange={handleCategoryOrderChange}
-        />
+          {Object.entries(groupedMenuWithSortedCategories).map(
+            ([categoryName, items]) => (
+              <div key={categoryName} className="mt-4">
+                <h3 className="text-lg font-bold bg-gray-100 p-2">
+                  {categoryName}
+                </h3>
+                {items.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center gap-2 border p-2"
+                  >
+                    <input
+                      type="checkbox"
+                      onChange={() =>
+                        setSelectedItems((prev) =>
+                          prev.includes(item.id)
+                            ? prev.filter((id) => id !== item.id)
+                            : [...prev, item.id]
+                        )
+                      }
+                    />
+                    <div className="flex-1">
+                      {item.title} - €{item.price}{" "}
+                      {item.terminated && "(Terminato)"}
+                    </div>
+                    <button
+                      onClick={() =>
+                        handleToggleTerminated(item.id, item.terminated)
+                      }
+                      className="text-sm px-2 py-1 bg-gray-500 text-white"
+                    >
+                      {item.terminated ? "Ripristina" : "Termina"}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )
+          )}
+          <div className="flex gap-x-5">
+            <button
+              onClick={handleAddMenuItem}
+              className="bg-blue-500 text-white px-4 py-2 "
+            >
+              Aggiungi Portata
+            </button>
+            <button
+              onClick={handleDeleteItems}
+              className="bg-red-500 text-white px-4 py-2"
+            >
+              Elimina Selezionati
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
