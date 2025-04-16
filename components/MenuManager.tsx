@@ -137,116 +137,121 @@ export default function MenuManager({ eventId, menu, mutate }: Props) {
   );
 
   return (
-    <div>
-      <div className="flex gap-x-5">
-        <div className="mb-4">
-          <label className="block mb-1 font-semibold">Nuova categoria:</label>
-          <input
-            type="text"
-            placeholder="Nome categoria"
-            value={newCategory}
-            onChange={(e) => setNewCategory(e.target.value)}
-            className="border p-2 w-full mb-2"
-          />
-          <button
-            onClick={handleAddCategory}
-            className="bg-blue-500 text-white px-4 py-2 "
-          >
-            Aggiungi Categoria
-          </button>
-        </div>
-
-        <MenuCategories categories={categories} setCategories={setCategories} />
-      </div>
-      {/* Gestione Portate */}
-      <h2 className="text-lg font-bold">Aggiungi Portata</h2>
-      <div className="flex gap-x-4">
-        <input
-          type="text"
-          placeholder="Titolo"
-          className="border p-2 mr-2"
-          value={newTitle}
-          onChange={(e) => setNewTitle(e.target.value)}
-        />
-        <input
-          type="number"
-          placeholder="Prezzo"
-          className="border p-2 mr-2"
-          value={newPrice}
-          onChange={(e) => setNewPrice(e.target.value)}
-        />
-        <select
-          value={selectedCategory}
-          onChange={(e) => setSelectedCategory(parseInt(e.target.value) || "")}
-          className="border p-2 min-w-48"
-        >
-          <option value="">Categoria</option>
-          {categories
-            .sort((a, b) => a.position - b.position)
-            .map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
-            ))}
-        </select>
-      </div>
-
-      <div className="grid grid-cols-2 gap-10">
-        <div>
-          <h2 className="text-lg font-bold mt-6">Gestisci Portate</h2>
-
-          {Object.entries(groupedMenuWithSortedCategories).map(
-            ([categoryName, items]) => (
-              <div key={categoryName} className="mt-4">
-                <h3 className="text-lg font-bold bg-gray-100 p-2">
-                  {categoryName}
-                </h3>
-                {items.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex items-center gap-2 border p-2"
-                  >
-                    <input
-                      type="checkbox"
-                      onChange={() =>
-                        setSelectedItems((prev) =>
-                          prev.includes(item.id)
-                            ? prev.filter((id) => id !== item.id)
-                            : [...prev, item.id]
-                        )
-                      }
-                    />
-                    <div className="flex-1">
-                      {item.title} - €{item.price}{" "}
-                      {item.terminated && "(Terminato)"}
-                    </div>
-                    <button
-                      onClick={() =>
-                        handleToggleTerminated(item.id, item.terminated)
-                      }
-                      className="text-sm px-2 py-1 bg-gray-500 text-white"
-                    >
-                      {item.terminated ? "Ripristina" : "Termina"}
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )
-          )}
-          <div className="flex gap-x-5">
+    <div className="grid grid-cols-2 gap-10">
+      <div>
+        <div className="flex gap-x-5">
+          <div className="mb-4">
+            <label className="block mb-1 font-semibold">Nuova categoria:</label>
+            <input
+              type="text"
+              placeholder="Nome categoria"
+              value={newCategory}
+              onChange={(e) => setNewCategory(e.target.value)}
+              className="border p-2 w-full mb-2"
+            />
             <button
-              onClick={handleAddMenuItem}
+              onClick={handleAddCategory}
               className="bg-blue-500 text-white px-4 py-2 "
             >
-              Aggiungi Portata
-            </button>
-            <button
-              onClick={handleDeleteItems}
-              className="bg-red-500 text-white px-4 py-2"
-            >
-              Elimina Selezionati
+              Aggiungi Categoria
             </button>
           </div>
+
+          <MenuCategories
+            categories={categories}
+            setCategories={setCategories}
+          />
+        </div>
+        {/* Gestione Portate */}
+        <h2 className="text-lg font-bold">Aggiungi Portata</h2>
+        <div className="flex gap-x-4">
+          <input
+            type="text"
+            placeholder="Titolo"
+            className="border p-2 mr-2"
+            value={newTitle}
+            onChange={(e) => setNewTitle(e.target.value)}
+          />
+          <input
+            type="number"
+            placeholder="Prezzo"
+            className="border p-2 mr-2"
+            value={newPrice}
+            onChange={(e) => setNewPrice(e.target.value)}
+          />
+          <select
+            value={selectedCategory}
+            onChange={(e) =>
+              setSelectedCategory(parseInt(e.target.value) || "")
+            }
+            className="border p-2 min-w-48"
+          >
+            <option value="">Categoria</option>
+            {categories
+              .sort((a, b) => a.position - b.position)
+              .map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <h2 className="text-lg font-bold">Gestisci Portate</h2>
+
+        {Object.entries(groupedMenuWithSortedCategories).map(
+          ([categoryName, items]) => (
+            <div key={categoryName} className="mt-4">
+              <h3 className="text-lg font-bold bg-gray-100 p-2">
+                {categoryName}
+              </h3>
+              {items.map((item) => (
+                <div
+                  key={item.id}
+                  className="flex items-center gap-2 border p-2"
+                >
+                  <input
+                    type="checkbox"
+                    onChange={() =>
+                      setSelectedItems((prev) =>
+                        prev.includes(item.id)
+                          ? prev.filter((id) => id !== item.id)
+                          : [...prev, item.id]
+                      )
+                    }
+                  />
+                  <div className="flex-1">
+                    {item.title} - €{item.price}{" "}
+                    {item.terminated && "(Terminato)"}
+                  </div>
+                  <button
+                    onClick={() =>
+                      handleToggleTerminated(item.id, item.terminated)
+                    }
+                    className="text-sm px-2 py-1 bg-gray-500 text-white"
+                  >
+                    {item.terminated ? "Ripristina" : "Termina"}
+                  </button>
+                </div>
+              ))}
+            </div>
+          )
+        )}
+        <div className="flex gap-x-5">
+          <button
+            onClick={handleAddMenuItem}
+            className="bg-blue-500 text-white px-4 py-2 "
+          >
+            Aggiungi Portata
+          </button>
+          <button
+            onClick={handleDeleteItems}
+            className="bg-red-500 text-white px-4 py-2"
+          >
+            Elimina Selezionati
+          </button>
         </div>
       </div>
     </div>

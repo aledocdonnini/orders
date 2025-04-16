@@ -51,8 +51,7 @@ export default function HomePage() {
   };
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold">Gestione Ordinazioni Sagra</h1>
+    <div className="grid grid-cols-2 gap-x-10">
       <EventCreator onEventCreated={handleCreateEvent} />
       <EventList
         events={events}

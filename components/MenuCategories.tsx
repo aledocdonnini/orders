@@ -50,7 +50,7 @@ export default function MenuCategories({
 
   return (
     <div>
-      <label className="block mb-1 font-semibold">Nuova categoria:</label>
+      <label className="block mb-1 font-semibold">Categorie:</label>
 
       <div className="">
         {categories.map((category, index) => (

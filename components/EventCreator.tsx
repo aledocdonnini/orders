@@ -31,8 +31,8 @@ export default function EventCreator({ onEventCreated }: EventCreatorProps) {
   };
 
   return (
-    <div className="p-4 border rounded">
-      <h2 className="text-xl font-bold">Crea un nuovo evento</h2>
+    <div className="">
+      <h2 className="text-xl font-bold mb-5">Crea un nuovo evento</h2>
       <input
         className="border p-2 w-full mt-2"
         placeholder="Titolo evento"
@@ -46,7 +46,7 @@ export default function EventCreator({ onEventCreated }: EventCreatorProps) {
         onChange={(e) => setDate(e.target.value)}
       />
       <button
-        className="bg-blue-500 text-white px-4 py-2 mt-2 disabled:opacity-50"
+        className="bg-blue-500 text-white px-4 py-2 mt-5 disabled:opacity-50"
         onClick={handleSubmit}
         disabled={loading}
       >

@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { formatDate } from "@/lib/utils";
 
 interface Event {
   id: number;
@@ -29,20 +30,20 @@ export default function EventList({
   };
 
   return (
-    <div className="mt-4">
-      <h2 className="text-xl font-bold">Eventi Disponibili</h2>
+    <div className="">
+      <h2 className="text-xl font-bold mb-5">Eventi Disponibili</h2>
       {events.length === 0 && <p>Nessun evento disponibile.</p>}
       <ul className="space-y-2">
         {events.map((event) => (
           <li
             key={event.id}
-            className="flex justify-between items-center border p-2 hover:bg-gray-100"
+            className="flex justify-between items-center border p-2 hover:bg-foreground/10"
           >
             <span
               className="cursor-pointer flex-1"
               onClick={() => handleEventClick(event)}
             >
-              {event.title} - {event.date}
+              {event.title} - {formatDate(event.date)}
             </span>
             <button
               onClick={() => onDelete(event.id)}

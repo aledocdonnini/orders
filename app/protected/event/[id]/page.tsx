@@ -4,11 +4,12 @@ import { useState } from "react";
 import { useMenu } from "@/hooks/useMenu";
 import { useOrders } from "@/hooks/useOrders";
 import { useCategories } from "@/hooks/useCategories";
+import { useEvent } from "@/hooks/useEvent";
 import { createOrder, updateOrder } from "@/lib/supabase";
 import { useParams } from "next/navigation";
 import { toast } from "react-toastify";
 import MenuManager from "@/components/MenuManager";
-
+import { formatDate } from "@/lib/utils";
 interface Order {
   id: number;
   customer_name: string;
@@ -19,6 +20,14 @@ interface Order {
 export default function EventPage() {
   const { id } = useParams();
   const eventId = Number(id);
+  const {
+    event,
+    isLoading: loadingEvent,
+    error: errorEvent,
+  } = useEvent(eventId);
+
+  const formattedDate = formatDate(event?.date);
+
   const { menu, isLoading: loadingMenu, error: errorMenu } = useMenu(eventId);
   const {
     orders,
@@ -131,8 +140,23 @@ export default function EventPage() {
   }, {});
 
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold">Gestione Evento #{eventId}</h1>
+    <div>
+      <div className="mb-10">
+        {loadingEvent ? (
+          <span className="text-sm font-normal">Caricamento evento...</span>
+        ) : errorEvent ? (
+          <span className="text-sm font-normal text-red-500">
+            Errore nel caricamento evento
+          </span>
+        ) : (
+          <h1>
+            <span className="font-bold text-5xl">
+              {event?.title || `#${eventId}`}
+            </span>{" "}
+            <span className="font-normal text-base">{formattedDate}</span>
+          </h1>
+        )}
+      </div>
 
       {/* Tab Switcher */}
       <div className="flex gap-4 border-b mb-4">
@@ -175,7 +199,7 @@ export default function EventPage() {
             ) : (
               Object.entries(groupedMenu).map(([categoryName, items]) => (
                 <div key={categoryName} className="mt-4">
-                  <h3 className="text-lg font-bold bg-gray-100 p-2">
+                  <h3 className="text-lg font-bold bg-foreground/10 py-1px-4">
                     {categoryName}
                   </h3>
                   {items.map((item) => (
@@ -185,8 +209,8 @@ export default function EventPage() {
                       disabled={item.terminated}
                       className={`block w-full px-4 py-2 mb-2 ${
                         item.terminated
-                          ? "bg-gray-400 cursor-not-allowed"
-                          : "bg-green-200 hover:bg-green-300"
+                          ? "bg-gray-500 cursor-not-allowed"
+                          : "border hover:bg-foreground/5 "
                       }`}
                     >
                       {item.title} - €{item.price}
