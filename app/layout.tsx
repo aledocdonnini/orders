@@ -9,6 +9,7 @@ import "./globals.css";
 
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import CustomIcon from "@/components/CustomIcon";
 
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
@@ -38,7 +39,14 @@ export default function RootLayout({
             <nav className="w-full border-b border-b-foreground/10 h-16">
               <div className="container  flex justify-between items-center p-3 px-5 text-sm ">
                 <div className="flex gap-5 items-center font-semibold">
-                  <Link href={"/"}>Orders</Link>
+                  <Link href={"/"}>
+                    <div className="bg-foreground p-1">
+                      <CustomIcon
+                        fileName="logo"
+                        classes="bg-background size-8"
+                      />
+                    </div>
+                  </Link>
                 </div>
                 <div className="ml-auto flex gap-x-3 items-center">
                   {!hasEnvVars ? <EnvVarWarning /> : <HeaderAuth />}
