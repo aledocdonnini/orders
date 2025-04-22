@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { createClient } from "@/utils/supabase/server";
+import { Power } from "lucide-react";
 
 export default async function AuthButton() {
   const supabase = await createClient();
@@ -49,11 +50,11 @@ export default async function AuthButton() {
     );
   }
   return user ? (
-    <div className="flex items-center gap-4">
-      <p>Hey, {user?.email?.split("@")[0] ?? "utente"}!</p>
+    <div className="">
+      {/* <p>Hey, {user?.email?.split("@")[0] ?? "utente"}!</p> */}
       <form action={signOutAction}>
-        <Button type="submit" variant={"outline"}>
-          Sign out
+        <Button type="submit" variant={"ghost"} size={"sm"}>
+          <Power key="light" size={18} className={"text-muted-foreground"} />
         </Button>
       </form>
     </div>

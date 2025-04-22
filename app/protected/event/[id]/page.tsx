@@ -141,7 +141,7 @@ export default function EventPage() {
 
   return (
     <div>
-      <div className="mb-10">
+      <div className="mb-5 ">
         {loadingEvent ? (
           <span className="text-sm font-normal">Caricamento evento...</span>
         ) : errorEvent ? (
@@ -149,10 +149,10 @@ export default function EventPage() {
             Errore nel caricamento evento
           </span>
         ) : (
-          <h1>
-            <span className="font-bold text-5xl">
+          <h1 className="flex justify-between items-center">
+            <span className=" font-bold text-5xl">
               {event?.title || `#${eventId}`}
-            </span>{" "}
+            </span>
             <span className="font-normal text-base">{formattedDate}</span>
           </h1>
         )}

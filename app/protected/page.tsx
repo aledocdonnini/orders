@@ -51,7 +51,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="grid grid-cols-2 gap-x-10">
+    <div className="grid lg:grid-cols-2 gap-10">
       <EventCreator onEventCreated={handleCreateEvent} />
       <EventList
         events={events}

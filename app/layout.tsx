@@ -54,7 +54,7 @@ export default function RootLayout({
                 </div>
               </div>
             </nav>
-            <div className="container mt-10 p-5">{children}</div>
+            <div className="container mt-5 p-5">{children}</div>
             <ToastContainer position="top-right" autoClose={3000} />
 
             <footer className="mt-auto w-full flex items-center justify-center border-t mx-auto text-center text-xs gap-8 py-8">

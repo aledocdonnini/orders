@@ -137,7 +137,7 @@ export default function MenuManager({ eventId, menu, mutate }: Props) {
   );
 
   return (
-    <div className="grid grid-cols-2 gap-10">
+    <div className="grid lg:grid-cols-2 gap-10">
       <div>
         <div className="flex gap-x-5">
           <div className="mb-4">
