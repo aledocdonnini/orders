@@ -50,8 +50,8 @@ export default async function AuthButton() {
     );
   }
   return user ? (
-    <div className="">
-      {/* <p>Hey, {user?.email?.split("@")[0] ?? "utente"}!</p> */}
+    <div className="flex items-center">
+      <p>{user?.email?.split("@")[0] ?? "utente"}</p>
       <form action={signOutAction}>
         <Button type="submit" variant={"ghost"} size={"sm"}>
           <Power key="light" size={18} className={"text-muted-foreground"} />

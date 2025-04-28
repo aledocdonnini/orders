@@ -1,14 +1,25 @@
 "use client";
 
 import { useState } from "react";
+import { format } from "date-fns";
+import { CalendarIcon } from "lucide-react";
 
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 interface EventCreatorProps {
   onEventCreated: (title: string, date: string) => void;
 }
 
 export default function EventCreator({ onEventCreated }: EventCreatorProps) {
   const [title, setTitle] = useState("");
-  const [date, setDate] = useState("");
+  const [date, setDate] = useState<Date>();
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -19,9 +30,10 @@ export default function EventCreator({ onEventCreated }: EventCreatorProps) {
     setError(null);
 
     try {
-      await onEventCreated(title, date);
+      const isoDate = date.toISOString().split("T")[0]; // "YYYY-MM-DD"
+      await onEventCreated(title, isoDate);
       setTitle("");
-      setDate("");
+      setDate(undefined);
     } catch (err: any) {
       console.error("Errore nella creazione dell'evento:", err);
       setError("Errore nella creazione dell'evento.");
@@ -31,20 +43,41 @@ export default function EventCreator({ onEventCreated }: EventCreatorProps) {
   };
 
   return (
-    <div className="">
+    <div>
       <h2 className="text-xl font-bold mb-5">Crea un nuovo evento</h2>
+
       <input
         className="border p-2 w-full mt-2"
         placeholder="Titolo evento"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
       />
-      <input
-        className="border p-2 w-full mt-2"
-        type="date"
-        value={date}
-        onChange={(e) => setDate(e.target.value)}
-      />
+
+      <div className="mt-4">
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant={"outline"}
+              className={cn(
+                "w-[240px] justify-start text-left font-normal",
+                !date && "text-muted-foreground"
+              )}
+            >
+              <CalendarIcon />
+              {date ? format(date, "PPP") : <span>Pick a date</span>}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              mode="single"
+              selected={date}
+              onSelect={setDate}
+              initialFocus
+            />
+          </PopoverContent>
+        </Popover>
+      </div>
+
       <button
         className="bg-blue-500 text-white px-4 py-2 mt-5 disabled:opacity-50"
         onClick={handleSubmit}
