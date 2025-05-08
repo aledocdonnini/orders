@@ -7,7 +7,8 @@ import {
   toggleMenuItemStatus,
   deleteMenuItems,
 } from "@/app/api/menu";
-import { toast } from "react-toastify";
+// import { toast } from "react-toastify";
+import { useToast } from "@/hooks/use-toast";
 import { getCategories } from "@/lib/supabase"; // Importa la funzione getCategories
 import MenuCategories from "./MenuCategories";
 
@@ -41,6 +42,7 @@ export default function MenuManager({ eventId, menu, mutate }: Props) {
   const [newCategory, setNewCategory] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<number | "">("");
   const [menuState, setMenuState] = useState<MenuItem[]>(menu);
+  const { toast } = useToast();
 
   // Funzione per caricare le categorie
   const fetchCategories = async () => {
@@ -48,7 +50,7 @@ export default function MenuManager({ eventId, menu, mutate }: Props) {
       const categoryList = await getCategories(eventId);
       setCategories(categoryList);
     } catch (error) {
-      toast.error("Errore nel recupero delle categorie.");
+      toast({ description: "Errore nel recupero delle categorie." });
     }
   };
   // Carica le categorie
@@ -58,7 +60,7 @@ export default function MenuManager({ eventId, menu, mutate }: Props) {
 
   async function handleAddMenuItem() {
     if (!newTitle.trim() || !newPrice || selectedCategory === "") {
-      return toast.error("Inserisci titolo, prezzo e categoria!");
+      return toast({ description: "Inserisci titolo, prezzo e categoria!" });
     }
 
     try {
@@ -72,14 +74,15 @@ export default function MenuManager({ eventId, menu, mutate }: Props) {
       setNewPrice("");
       setSelectedCategory(""); // Resetta la categoria selezionata
       mutate();
+      toast({ description: "Portata aggiunta." });
     } catch (error) {
-      toast.error("Errore nell'aggiunta della portata.");
+      toast({ description: "Errore nell'aggiunta della portata." });
     }
   }
 
   async function handleAddCategory() {
     if (!newCategory.trim()) {
-      return toast.error("Inserisci un nome per la categoria!");
+      return toast({ description: "Inserisci un nome per la categoria!" });
     }
 
     try {
@@ -87,13 +90,15 @@ export default function MenuManager({ eventId, menu, mutate }: Props) {
       setNewCategory(""); // Pulisce il campo categoria
       await fetchCategories(); // 🔄 Ricarica la lista delle categorie
     } catch (error) {
-      toast.error("Errore nell'aggiunta della categoria");
+      toast({ description: "Errore nell'aggiunta della categoria" });
     }
   }
 
   async function handleDeleteItems() {
     if (selectedItems.length === 0)
-      return toast.error("Seleziona almeno una portata da eliminare!");
+      return toast({
+        description: "Seleziona almeno una portata da eliminare!",
+      });
     if (!confirm("Sei sicuro di voler eliminare le portate selezionate?"))
       return;
     await deleteMenuItems(selectedItems);
@@ -204,7 +209,7 @@ export default function MenuManager({ eventId, menu, mutate }: Props) {
         {Object.entries(groupedMenuWithSortedCategories).map(
           ([categoryName, items]) => (
             <div key={categoryName} className="mt-4">
-              <h3 className="text-lg font-bold bg-gray-100 p-2">
+              <h3 className="text-lg font-bold bg-foreground/10 p-2">
                 {categoryName}
               </h3>
               {items.map((item) => (

@@ -18,9 +18,12 @@ interface MenuItem {
 }
 interface OrderItem {
   id: number;
-  title: string;
   price: number;
-  quantity: number;
+  title: string;
+  event_id: number;
+  position: number;
+  category_id: number;
+  terminated?: boolean;
 }
 interface MenuCategory {
   id: number;
@@ -100,17 +103,47 @@ export async function deleteOrder(orderId: number) {
 export async function updateOrder(
   orderId: number,
   customerName: string,
-  items: any[]
+  items: {
+    id: number;
+    price: number;
+    title: string;
+    event_id: number;
+    position: number;
+    terminated: boolean;
+    category_id: number;
+  }[]
 ) {
   const total = items.reduce((sum, item) => sum + item.price, 0);
-  const { data, error } = await supabase
-    .from("orders")
-    .update({ customer_name: customerName, items, total })
-    .eq("id", orderId)
-    .select()
-    .single();
 
-  if (error) throw new Error(error.message);
+  const { error: updateError } = await supabase
+    .from("orders")
+    .update({
+      customer_name: customerName,
+      items, // viene salvato come array JSON
+      total,
+    })
+    .eq("id", orderId);
+
+  if (updateError) {
+    throw new Error(`Errore durante l'update: ${updateError.message}`);
+  }
+
+  const { data, error: selectError } = await supabase
+    .from("orders")
+    .select("*")
+    .eq("id", orderId)
+    .maybeSingle();
+
+  if (selectError) {
+    throw new Error(
+      `Errore durante la lettura del record aggiornato: ${selectError.message}`
+    );
+  }
+
+  if (!data) {
+    throw new Error(`Ordine con ID ${orderId} non trovato dopo l'update`);
+  }
+
   return data;
 }
 

@@ -22,36 +22,79 @@ export default function OrderList({ eventId }: { eventId: number }) {
   };
 
   return (
-    <div className="p-4 border rounded-md bg-white shadow">
-      <h2 className="text-xl font-bold mb-2">Ordini Effettuati</h2>
+    <Dialog>
       {orders.length === 0 ? (
         <p>Nessun ordine effettuato.</p>
       ) : (
-        <ul>
-          {orders.map((order) => (
-            <li
+        orders
+          .sort((a, b) => b.id - a.id)
+          .map((order) => (
+            <div
               key={order.id}
-              className="flex justify-between items-center p-2 border-b"
+              className="border p-2 mb-2 flex justify-between items-center"
             >
               <div>
                 <p>
-                  <strong>#{order.id}</strong> - {order.customer_name}
+                  <strong>Ordine #{order.id}</strong> - {order.customer_name}
                 </p>
                 <p className="text-gray-500">
                   Totale: €{order.total.toFixed(2)}
                 </p>
               </div>
-              <button
-                onClick={() => handleDelete(order.id)}
-                className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-700 transition"
-                disabled={loadingOrder === order.id}
-              >
-                {loadingOrder === order.id ? "Eliminando..." : "❌"}
-              </button>
-            </li>
-          ))}
-        </ul>
+              {/* <button
+                              onClick={() => openEditModal(order)}
+                              className="bg-yellow-500 text-white px-2 py-1 rounded"
+                            >
+                              Modifica
+                            </button> */}
+              <DialogTrigger onClick={() => openEditModal(order)}>
+                Modifica
+              </DialogTrigger>
+            </div>
+          ))
       )}
-    </div>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Modifica Ordine #{editingOrder?.id}</DialogTitle>
+          <DialogDescription>
+            <input
+              type="text"
+              placeholder="Nome Cliente"
+              className="border p-2 w-full mb-2"
+              value={editingCustomer}
+              onChange={(e) => setEditingCustomer(e.target.value)}
+            />
+            <h3 className="font-bold mb-2">Seleziona Portate</h3>
+            {menu.map((item) => (
+              <div key={item.id} className="flex items-center gap-2 mb-1">
+                <label className={item.terminated ? "opacity-45" : ""}>
+                  <input
+                    type="checkbox"
+                    checked={editingItems.some((i) => i.id === item.id)}
+                    onChange={() => toggleEditingItem(item)}
+                    disabled={item.terminated}
+                  />
+                  {item.title} - €{item.price}
+                </label>
+              </div>
+            ))}
+            <div className="flex justify-end gap-2 mt-4">
+              <button
+                className="bg-gray-500 text-white px-4 py-2 rounded"
+                onClick={() => setEditingOrder(null)}
+              >
+                Annulla
+              </button>
+              <button
+                className="bg-blue-500 text-white px-4 py-2 rounded"
+                onClick={handleUpdateOrder}
+              >
+                Salva Modifiche
+              </button>
+            </div>
+          </DialogDescription>
+        </DialogHeader>
+      </DialogContent>
+    </Dialog>
   );
 }
