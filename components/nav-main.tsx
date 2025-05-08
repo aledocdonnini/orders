@@ -32,7 +32,7 @@ export function NavMain({
           <SidebarMenuItem key={item.title}>
             <SidebarMenuButton asChild>
               <a href={item.url}>
-                {item.icon && <item.icon className="!size-5" />}
+                {item.icon && <item.icon className="!size-6" />}
                 <span>{item.title}</span>
               </a>
             </SidebarMenuButton>

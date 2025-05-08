@@ -6,7 +6,6 @@ import {
   ListOrdered,
   ClipboardPlus,
   CalendarDays,
-  GalleryVerticalEnd,
 } from "lucide-react";
 import { useParams } from "next/navigation";
 import { NavMain } from "@/components/nav-main";
@@ -20,11 +19,14 @@ import {
   SidebarRail,
   SidebarMenuButton,
 } from "@/components/ui/sidebar";
+import { Separator } from "@/components/ui/separator";
+
 import CustomIcon from "./CustomIcon";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { id } = useParams();
   const eventId = Number(id);
+  const prefix = eventId ? "./" : `${eventId}/`;
   const data = {
     navMain: [
       {
@@ -36,17 +38,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     projects: [
       {
         name: "Gestione portate",
-        url: "./menu",
+        url: prefix + "menu",
         icon: NotebookText,
       },
       {
         name: "Creazione ordini",
-        url: "./create-orders",
+        url: prefix + "create-orders",
         icon: ClipboardPlus,
       },
       {
         name: "Ordini effettuati",
-        url: "./orders",
+        url: prefix + "orders",
         icon: ListOrdered,
       },
     ],
@@ -71,8 +73,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </a>
         </SidebarMenuButton>
       </SidebarHeader>
-      <SidebarContent className="divide-y">
-        {id && <NavProjects projects={data.projects} />}
+      <SidebarContent>
+        {id && (
+          <>
+            <NavProjects projects={data.projects} />
+            <Separator className="my-4" />
+          </>
+        )}
         <NavMain items={data.navMain} />
       </SidebarContent>
       {props.user && (

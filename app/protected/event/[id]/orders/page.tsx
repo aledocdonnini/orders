@@ -1,5 +1,4 @@
 "use client";
-import OrderList from "@/components/OrderList";
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import { useOrders } from "@/hooks/useOrders";
@@ -111,7 +110,6 @@ export default function OrdersPage() {
   return (
     <div>
       <h1 className="text-2xl font-bold">Lista Ordini</h1>
-      {/* <OrderList eventId={1} /> */}
       <Dialog>
         {orders.length === 0 ? (
           <p>Nessun ordine effettuato.</p>

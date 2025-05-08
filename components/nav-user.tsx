@@ -19,6 +19,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { Button } from "@/components/ui/button";
 
 export function NavUser({
   user,
@@ -83,9 +84,11 @@ export function NavUser({
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem>
-              <form action={signOutAction} className="flex items-center">
-                <LogOut />
-                Log out
+              <form action={signOutAction}>
+                <button type="submit" className="flex items-center gap-x-2">
+                  <LogOut />
+                  Log out
+                </button>
               </form>
             </DropdownMenuItem>
           </DropdownMenuContent>
