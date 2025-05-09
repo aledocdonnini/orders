@@ -25,7 +25,7 @@ export default async function AuthButton() {
               Please update .env.local file with anon key and url
             </Badge>
           </div>
-          <div className="flex gap-2">
+          <div className="w-full flex justify-center gap-5">
             <Button
               asChild
               size="sm"
@@ -59,7 +59,7 @@ export default async function AuthButton() {
       </form>
     </div>
   ) : (
-    <div className="flex gap-2">
+    <div className="w-full flex justify-center gap-5">
       <Button asChild size="sm" variant={"outline"}>
         <Link href="/sign-in">Sign in</Link>
       </Button>
