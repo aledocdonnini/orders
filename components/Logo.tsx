@@ -2,7 +2,6 @@ import CustomIcon from "@/components/CustomIcon";
 import Link from "next/link";
 
 export default function Logo({ isMobile = false }) {
-  console.log("isMobile", isMobile);
   return (
     <>
       <Link href="/" className="flex gap-3 items-center">
