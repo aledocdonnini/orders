@@ -97,9 +97,12 @@ export default async function RootLayout({
         href="/favicon/favicon-16x16.png"
       />
       <link rel="manifest" href="/favicon/manifest.json" />
+      <meta name="apple-mobile-web-app-capable" content="yes" />
+      <meta name="apple-mobile-web-app-status-bar-style" content="#2c3438" />
+      <meta name="apple-mobile-web-app-title" content="Notentool" />
       <meta name="msapplication-TileColor" content="#ffffff" />
       <meta name="msapplication-TileImage" content="/ms-icon-144x144.png" />
-      <meta name="theme-color" content="#ffffff"></meta>
+      <meta name="theme-color" content="#ffffff" />
       <body className="bg-background text-foreground">
         <ThemeProvider
           attribute="class"
