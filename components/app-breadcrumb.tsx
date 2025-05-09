@@ -26,7 +26,7 @@ export function AppBreadcrumb({
     <Breadcrumb>
       <BreadcrumbList>
         <BreadcrumbItem className="hidden md:block">
-          <BreadcrumbLink href="/">Dashboard</BreadcrumbLink>
+          <BreadcrumbLink href="/">Eventi</BreadcrumbLink>
         </BreadcrumbItem>
         <BreadcrumbSeparator className="hidden md:block" />
         <BreadcrumbItem>

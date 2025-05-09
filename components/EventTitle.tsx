@@ -9,7 +9,9 @@ export default function EventTitle() {
   const { event } = useEvent(eventId);
 
   const formattedDate = formatDate(event?.date);
-
+  if (!id) {
+    return;
+  }
   return (
     <div>
       <h1 className="font-bold text-5xl">{event?.title || "..."}</h1>
