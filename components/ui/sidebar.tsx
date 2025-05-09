@@ -24,7 +24,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import CustomIcon from "@/components/CustomIcon";
+import Logo from "@/components/Logo";
 
 const SIDEBAR_COOKIE_NAME = "sidebar_state";
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
@@ -283,11 +283,7 @@ const SidebarTrigger = React.forwardRef<
 
   return (
     <>
-      {isMobile && (
-        <div className="flex aspect-square rounded-md bg-foreground p-1 mr-1">
-          <CustomIcon fileName="logo" classes="size-6 bg-background" />
-        </div>
-      )}
+      {isMobile && <Logo isMobile={true} />}
       <Button
         ref={ref}
         data-sidebar="trigger"

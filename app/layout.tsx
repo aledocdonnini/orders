@@ -7,6 +7,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { AppBreadcrumb } from "@/components/app-breadcrumb";
 import CustomIcon from "@/components/CustomIcon";
 import EventTitle from "@/components/EventTitle";
+import Template from "@/components/Template";
 
 import "./globals.css";
 
@@ -40,42 +41,7 @@ export default async function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <SidebarProvider>
-            {user && (
-              <AppSidebar
-                user={{
-                  name: user?.email?.split("@")[0],
-                  email: user?.email,
-                  avatar: "/default-avatar.png",
-                }}
-              />
-            )}
-            <main className="w-full min-h-screen flex flex-col items-center">
-              <nav className="w-full border-b border-b-foreground/10 h-16">
-                <div className="flex justify-between items-center p-3 px-5 text-sm gap-x-3">
-                  {user && <SidebarTrigger />}
-                  {!user && (
-                    <div className="flex aspect-square rounded-md bg-foreground p-1 mr-1">
-                      <CustomIcon
-                        fileName="logo"
-                        classes="size-6 bg-background"
-                      />
-                    </div>
-                  )}
-                  {user && <AppBreadcrumb />}
-                  <div className="ml-auto">
-                    <ThemeSwitcher />
-                  </div>
-                </div>
-              </nav>
-
-              <div className="w-full p-5">
-                {user && <EventTitle />}
-                {children}
-              </div>
-              <Toaster />
-            </main>
-          </SidebarProvider>
+          <Template user={user}>{children}</Template>
         </ThemeProvider>
       </body>
     </html>

@@ -19,7 +19,9 @@ import {
 
 export function NavProjects({
   projects,
+  toggleSidebar,
 }: {
+  toggleSidebar: any;
   projects: {
     name: string;
     url: string;
@@ -28,13 +30,18 @@ export function NavProjects({
 }) {
   const { isMobile } = useSidebar();
 
+  function handleCloseSidebar() {
+    if (isMobile) {
+      toggleSidebar();
+    }
+  }
   return (
     <SidebarGroup className="group-data-[collapsible=icon]:icon">
       <SidebarGroupLabel>Evento</SidebarGroupLabel>
       <SidebarMenu>
         {projects.map((item) => (
           <SidebarMenuItem key={item.name}>
-            <SidebarMenuButton asChild>
+            <SidebarMenuButton asChild onClick={() => handleCloseSidebar()}>
               <Link href={item.url}>
                 {item.icon && <item.icon className="!size-6" />}
                 <span>{item.name}</span>
