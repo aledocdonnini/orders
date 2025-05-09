@@ -1,12 +1,5 @@
-import { ThemeSwitcher } from "@/components/theme-switcher";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/app-sidebar";
-import { ThemeProvider } from "next-themes";
 import { createClient } from "@/utils/supabase/server";
-import { Toaster } from "@/components/ui/toaster";
-import { AppBreadcrumb } from "@/components/app-breadcrumb";
-import CustomIcon from "@/components/CustomIcon";
-import EventTitle from "@/components/EventTitle";
+import { ThemeProvider } from "next-themes";
 import Template from "@/components/Template";
 
 import "./globals.css";
