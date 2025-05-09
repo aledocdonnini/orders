@@ -32,9 +32,9 @@ const config = {
           DEFAULT: "hsl(var(--secondary))",
           foreground: "hsl(var(--secondary-foreground))",
         },
-        success: {
-          DEFAULT: "hsl(var(--success))",
-          foreground: "hsl(var(--success-foreground))",
+        constructive: {
+          DEFAULT: "hsl(var(--constructive))",
+          foreground: "hsl(var(--constructive-foreground))",
         },
         destructive: {
           DEFAULT: "hsl(var(--destructive))",

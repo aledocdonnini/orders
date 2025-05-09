@@ -25,11 +25,11 @@ export default function Template({
           user={{
             name: user?.email?.split("@")[0],
             email: user?.email,
-            avatar: "/default-avatar.png",
+            avatar: "",
           }}
         />
       )}
-      <main className="w-full min-h-screen flex flex-col items-center">
+      <main className="w-full flex flex-col items-center">
         <nav className="w-full border-b border-b-foreground/10 h-16">
           <div className="flex justify-between items-center p-3 px-5 text-sm gap-x-3">
             {user && <SidebarTrigger />}

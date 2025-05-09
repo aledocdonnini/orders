@@ -64,7 +64,7 @@ export default function OrdersPage() {
       setSelectedItems([]);
       setOrderError("");
       toast({
-        variant: "success",
+        variant: "constructive",
         description: "Ordine creato con successo!",
       });
     } catch (err: any) {
@@ -114,7 +114,7 @@ export default function OrdersPage() {
       mutateOrders();
       setEditingOrder(null);
       toast({
-        variant: "success",
+        variant: "constructive",
         description: "Ordine aggiornato con successo!",
       });
     } catch (err: any) {

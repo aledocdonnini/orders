@@ -80,7 +80,7 @@ export default function MenuManager({ eventId, menu, mutate }: Props) {
       setNewPrice("");
       setSelectedCategory(""); // Resetta la categoria selezionata
       mutate();
-      toast({ variant: "success", description: "Portata aggiunta." });
+      toast({ variant: "constructive", description: "Portata aggiunta." });
     } catch (error) {
       toast({
         variant: "destructive",

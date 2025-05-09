@@ -79,7 +79,7 @@ export default function OrdersPage() {
       setSelectedItems([]);
       setOrderError("");
       toast({
-        variant: "success",
+        variant: "constructive",
         description: "Ordine creato con successo!",
       });
     } catch (err: any) {
@@ -93,10 +93,10 @@ export default function OrdersPage() {
   }
 
   return (
-    <div className="w-full ">
+    <div className="w-full">
       <h2 className="text-xl font-bold mb-2"> Portate Disponibili </h2>
-      <div className="grid grid-cols-2 gap-5">
-        <div>
+      <div className="flex gap-5">
+        <div className="flex-1">
           {menu.length === 0 ? (
             <p>Nessuna portata trovata.</p>
           ) : (
@@ -129,7 +129,7 @@ export default function OrdersPage() {
         </div>
 
         {/* Colonna 2: Carrello (portate selezionate) */}
-        <div>
+        <div className="sticky top-1 h-full flex-1">
           <h2 className="text-xl font-bold mb-2">Carrello</h2>
           <input
             className="border p-2 w-full mb-2"
