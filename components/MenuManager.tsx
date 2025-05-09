@@ -50,7 +50,10 @@ export default function MenuManager({ eventId, menu, mutate }: Props) {
       const categoryList = await getCategories(eventId);
       setCategories(categoryList);
     } catch (error) {
-      toast({ description: "Errore nel recupero delle categorie." });
+      toast({
+        variant: "destructive",
+        description: "Errore nel recupero delle categorie.",
+      });
     }
   };
   // Carica le categorie
@@ -60,7 +63,10 @@ export default function MenuManager({ eventId, menu, mutate }: Props) {
 
   async function handleAddMenuItem() {
     if (!newTitle.trim() || !newPrice || selectedCategory === "") {
-      return toast({ description: "Inserisci titolo, prezzo e categoria!" });
+      return toast({
+        variant: "destructive",
+        description: "Inserisci titolo, prezzo e categoria!",
+      });
     }
 
     try {
@@ -74,15 +80,21 @@ export default function MenuManager({ eventId, menu, mutate }: Props) {
       setNewPrice("");
       setSelectedCategory(""); // Resetta la categoria selezionata
       mutate();
-      toast({ description: "Portata aggiunta." });
+      toast({ variant: "success", description: "Portata aggiunta." });
     } catch (error) {
-      toast({ description: "Errore nell'aggiunta della portata." });
+      toast({
+        variant: "destructive",
+        description: "Errore nell'aggiunta della portata.",
+      });
     }
   }
 
   async function handleAddCategory() {
     if (!newCategory.trim()) {
-      return toast({ description: "Inserisci un nome per la categoria!" });
+      return toast({
+        variant: "destructive",
+        description: "Inserisci un nome per la categoria!",
+      });
     }
 
     try {
@@ -90,13 +102,17 @@ export default function MenuManager({ eventId, menu, mutate }: Props) {
       setNewCategory(""); // Pulisce il campo categoria
       await fetchCategories(); // 🔄 Ricarica la lista delle categorie
     } catch (error) {
-      toast({ description: "Errore nell'aggiunta della categoria" });
+      toast({
+        variant: "destructive",
+        description: "Errore nell'aggiunta della categoria",
+      });
     }
   }
 
   async function handleDeleteItems() {
     if (selectedItems.length === 0)
       return toast({
+        variant: "destructive",
         description: "Seleziona almeno una portata da eliminare!",
       });
     if (!confirm("Sei sicuro di voler eliminare le portate selezionate?"))

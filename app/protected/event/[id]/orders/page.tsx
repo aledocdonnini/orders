@@ -63,8 +63,15 @@ export default function OrdersPage() {
       setCustomerName("");
       setSelectedItems([]);
       setOrderError("");
-      toast({ description: "Ordine creato con successo!" });
+      toast({
+        variant: "success",
+        description: "Ordine creato con successo!",
+      });
     } catch (err: any) {
+      toast({
+        variant: "destructive",
+        description: "Errore nella creazione dell'ordine!",
+      });
       setOrderError("Errore nella creazione dell'ordine!");
       console.error(err);
     }
@@ -89,20 +96,32 @@ export default function OrdersPage() {
   // Salva le modifiche ad un ordine
   async function handleUpdateOrder() {
     if (!editingCustomer.trim()) {
-      toast({ description: "Inserisci il nome del cliente!" });
+      toast({
+        variant: "destructive",
+        description: "Inserisci il nome del cliente!",
+      });
       return;
     }
     if (editingItems.length === 0) {
-      toast({ description: "Seleziona almeno una portata per l'ordine!" });
+      toast({
+        variant: "destructive",
+        description: "Seleziona almeno una portata per l'ordine!",
+      });
       return;
     }
     try {
       await updateOrder(editingOrder!.id, editingCustomer, editingItems);
       mutateOrders();
       setEditingOrder(null);
-      toast({ description: "Ordine aggiornato con successo!" });
+      toast({
+        variant: "success",
+        description: "Ordine aggiornato con successo!",
+      });
     } catch (err: any) {
-      toast({ description: "Errore nell'aggiornamento dell'ordine!" });
+      toast({
+        variant: "destructive",
+        description: "Errore nell'aggiornamento dell'ordine!",
+      });
       console.error(err);
     }
   }

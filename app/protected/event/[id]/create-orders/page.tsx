@@ -78,8 +78,15 @@ export default function OrdersPage() {
       setCustomerName("");
       setSelectedItems([]);
       setOrderError("");
-      toast({ description: "Ordine creato con successo!" });
+      toast({
+        variant: "success",
+        description: "Ordine creato con successo!",
+      });
     } catch (err: any) {
+      toast({
+        variant: "destructive",
+        description: "Errore nella creazione dell'ordine!",
+      });
       setOrderError("Errore nella creazione dell'ordine!");
       console.error(err);
     }
