@@ -7,7 +7,7 @@ import {
   Trash2,
   type LucideIcon,
 } from "lucide-react";
-
+import Link from "next/link";
 import {
   SidebarGroup,
   SidebarGroupLabel,
@@ -35,10 +35,10 @@ export function NavProjects({
         {projects.map((item) => (
           <SidebarMenuItem key={item.name}>
             <SidebarMenuButton asChild>
-              <a href={item.url}>
+              <Link href={item.url}>
                 {item.icon && <item.icon className="!size-6" />}
                 <span>{item.name}</span>
-              </a>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         ))}
