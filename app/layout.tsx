@@ -96,6 +96,12 @@ export default async function RootLayout({
         sizes="16x16"
         href="/favicon/favicon-16x16.png"
       />
+      <link
+        rel="apple-touch-startup-image"
+        href="/favicon/orders-logo.png"
+        media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)"
+      />
+
       {/* <link rel="manifest" href="/favicon/manifest.json" /> */}
       <link rel="manifest" href="/favicon/site.webmanifest" />
       <meta name="apple-mobile-web-app-capable" content="yes" />
