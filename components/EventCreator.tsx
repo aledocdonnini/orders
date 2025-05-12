@@ -7,6 +7,7 @@ import { CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
+import { Input } from "@/components/ui/input";
 import {
   Popover,
   PopoverContent,
@@ -43,10 +44,10 @@ export default function EventCreator({ onEventCreated }: EventCreatorProps) {
   };
 
   return (
-    <div>
+    <div className=" text-center">
       <h2 className="text-xl font-bold mb-5">Crea un nuovo evento</h2>
 
-      <input
+      <Input
         className="border p-2 w-full mt-2"
         placeholder="Titolo evento"
         value={title}
@@ -54,17 +55,17 @@ export default function EventCreator({ onEventCreated }: EventCreatorProps) {
       />
 
       <div className="mt-4">
-        <Popover>
+        <Popover modal={true}>
           <PopoverTrigger asChild>
             <Button
               variant={"outline"}
               className={cn(
-                "w-[240px] justify-start text-left font-normal",
+                "w-full justify-between text-left font-normal",
                 !date && "text-muted-foreground"
               )}
             >
+              {date ? format(date, "PPP") : <span>Seleziona data</span>}
               <CalendarIcon />
-              {date ? format(date, "PPP") : <span>Pick a date</span>}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">
@@ -78,13 +79,13 @@ export default function EventCreator({ onEventCreated }: EventCreatorProps) {
         </Popover>
       </div>
 
-      <button
-        className="bg-blue-500 text-white px-4 py-2 mt-5 disabled:opacity-50"
+      <Button
+        className="mx-auto px-4 py-2 mt-5 disabled:opacity-50"
         onClick={handleSubmit}
         disabled={loading}
       >
         {loading ? "Creazione in corso..." : "Aggiungi Evento"}
-      </button>
+      </Button>
 
       {error && <p className="text-red-600 mt-2">{error}</p>}
     </div>

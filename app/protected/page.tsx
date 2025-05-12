@@ -4,6 +4,18 @@ import { useEffect, useState } from "react";
 import EventCreator from "@/components/EventCreator";
 import EventList from "@/components/EventList";
 import { getEvents, createEvent, deleteEvent } from "@/lib/supabase";
+import { PlusIcon } from "lucide-react";
+
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
 
 interface Event {
   id: number;
@@ -51,14 +63,23 @@ export default function HomePage() {
   };
 
   return (
-    <div className="grid lg:grid-cols-2 gap-10">
-      <EventCreator onEventCreated={handleCreateEvent} />
+    <div className="">
       <EventList
         events={events}
         selectedEvent={selectedEvent}
         setSelectedEvent={setSelectedEvent}
         onDelete={handleDeleteEvent}
       />
+      <Drawer>
+        <DrawerTrigger className="fixed bottom-5 right-5 bg-foreground text-background p-3 rounded-full">
+          <PlusIcon />
+        </DrawerTrigger>
+        <DrawerContent>
+          <div className="p-10 w-full max-w-[350px] mx-auto">
+            <EventCreator onEventCreated={handleCreateEvent} />
+          </div>
+        </DrawerContent>
+      </Drawer>
     </div>
   );
 }
