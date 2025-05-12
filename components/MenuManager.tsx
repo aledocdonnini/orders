@@ -7,10 +7,19 @@ import {
   toggleMenuItemStatus,
   deleteMenuItems,
 } from "@/app/api/menu";
-// import { toast } from "react-toastify";
 import { useToast } from "@/hooks/use-toast";
-import { getCategories } from "@/lib/supabase"; // Importa la funzione getCategories
+import { getCategories } from "@/lib/supabase";
 import MenuCategories from "./MenuCategories";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
 
 interface MenuItem {
   id: number;
@@ -158,49 +167,26 @@ export default function MenuManager({ eventId, menu, mutate }: Props) {
   );
 
   return (
-    <div className="grid lg:grid-cols-2 gap-10">
-      <div>
-        <div className="flex gap-x-5">
-          <div className="mb-4">
-            <label className="block mb-1 font-semibold">Nuova categoria:</label>
-            <input
-              type="text"
-              placeholder="Nome categoria"
-              value={newCategory}
-              onChange={(e) => setNewCategory(e.target.value)}
-              className="border p-2 w-full mb-2"
-            />
-            <button
-              onClick={handleAddCategory}
-              className="bg-blue-500 text-white px-4 py-2 "
-            >
-              Aggiungi Categoria
-            </button>
-          </div>
-
-          <MenuCategories
-            categories={categories}
-            setCategories={setCategories}
-          />
-        </div>
+    <div>
+      <div className="mt-10">
         {/* Gestione Portate */}
-        <h2 className="text-lg font-bold">Aggiungi Portata</h2>
-        <div className="flex gap-x-4">
-          <input
+        <h3 className="text-lg font-bold mb-5">Aggiungi Portata</h3>
+        <div className="flex gap-x-4 justify-start">
+          <Input
             type="text"
             placeholder="Titolo"
-            className="border p-2 mr-2"
             value={newTitle}
+            className="w-[250px]"
             onChange={(e) => setNewTitle(e.target.value)}
           />
-          <input
+          <Input
             type="number"
             placeholder="Prezzo"
-            className="border p-2 mr-2"
             value={newPrice}
+            className="w-[200px]"
             onChange={(e) => setNewPrice(e.target.value)}
           />
-          <select
+          {/* <select
             value={selectedCategory}
             onChange={(e) =>
               setSelectedCategory(parseInt(e.target.value) || "")
@@ -215,12 +201,36 @@ export default function MenuManager({ eventId, menu, mutate }: Props) {
                   {category.name}
                 </option>
               ))}
-          </select>
+          </select> */}
+          <Select>
+            <SelectTrigger
+              className="w-[150px]"
+              onChange={(e) =>
+                setSelectedCategory(parseInt(e.target.value) || "")
+              }
+            >
+              <SelectValue placeholder="Categoria" />
+            </SelectTrigger>
+            <SelectContent>
+              {categories
+                .sort((a, b) => a.position - b.position)
+                .map((category) => (
+                  <SelectItem key={category.id} value={category.id}>
+                    {category.name}
+                  </SelectItem>
+                ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className=" mt-5">
+          <Button variant={"default"} onClick={handleAddMenuItem} className=" ">
+            Aggiungi Portata
+          </Button>
         </div>
       </div>
 
-      <div>
-        <h2 className="text-lg font-bold">Gestisci Portate</h2>
+      <div className="mt-10">
+        <h3 className="text-lg font-bold">Gestisci Portate</h3>
 
         {Object.entries(groupedMenuWithSortedCategories).map(
           ([categoryName, items]) => (
@@ -233,7 +243,7 @@ export default function MenuManager({ eventId, menu, mutate }: Props) {
                   key={item.id}
                   className="flex items-center gap-2 border p-2"
                 >
-                  <input
+                  {/* <input
                     type="checkbox"
                     onChange={() =>
                       setSelectedItems((prev) =>
@@ -242,39 +252,79 @@ export default function MenuManager({ eventId, menu, mutate }: Props) {
                           : [...prev, item.id]
                       )
                     }
-                  />
-                  <div className="flex-1">
-                    {item.title} - €{item.price}{" "}
-                    {item.terminated && "(Terminato)"}
+                  /> */}
+                  <div className="flex flex-1 items-center space-x-2">
+                    <Checkbox
+                      id={`item-${item.id}`}
+                      onChange={() =>
+                        setSelectedItems((prev) =>
+                          prev.includes(item.id)
+                            ? prev.filter((id) => id !== item.id)
+                            : [...prev, item.id]
+                        )
+                      }
+                    />
+                    <label
+                      htmlFor={`item-${item.id}`}
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                      <span className="text-lg font-semibold">
+                        {item.title}
+                      </span>
+                      <span className=""> - €{item.price} </span>
+                      <span className="">
+                        {item.terminated && "(Terminato)"}
+                      </span>
+                    </label>
                   </div>
-                  <button
+
+                  <Button
+                    size={null}
                     onClick={() =>
                       handleToggleTerminated(item.id, item.terminated)
                     }
                     className="text-sm px-2 py-1 bg-gray-500 text-white"
                   >
                     {item.terminated ? "Ripristina" : "Termina"}
-                  </button>
+                  </Button>
                 </div>
               ))}
             </div>
           )
         )}
-        <div className="flex gap-x-5">
-          <button
-            onClick={handleAddMenuItem}
-            className="bg-blue-500 text-white px-4 py-2 "
-          >
-            Aggiungi Portata
-          </button>
-          <button
+        <div className="flex justify-between gap-x-5 mt-5">
+          <Button
+            variant={"outline"}
             onClick={handleDeleteItems}
-            className="bg-red-500 text-white px-4 py-2"
+            className="px-4 py-2"
           >
             Elimina Selezionati
-          </button>
+          </Button>
         </div>
       </div>
+
+      {/* <div className=" mt-10">
+        <h3 className="text-lg font-bold">Gestisci Categorie</h3>
+
+        <div className="mb-4">
+          <label className="block mb-1 font-semibold">Nuova categoria:</label>
+          <Input
+            type="text"
+            placeholder="Nome categoria"
+            value={newCategory}
+            onChange={(e) => setNewCategory(e.target.value)}
+            className="border p-2 w-full mb-2"
+          />
+          <Button
+            onClick={handleAddCategory}
+            className="bg-blue-500 text-white px-4 py-2 "
+          >
+            Aggiungi Categoria
+          </Button>
+        </div>
+
+        <MenuCategories categories={categories} setCategories={setCategories} />
+      </div> */}
     </div>
   );
 }

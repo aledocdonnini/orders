@@ -13,6 +13,10 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
+
 export default function OrdersPage() {
   const { id } = useParams();
   const eventId = Number(id);
@@ -103,22 +107,24 @@ export default function OrdersPage() {
             Object.entries(groupedMenu).map(([categoryName, items]) => (
               <div key={categoryName} className="mt-4">
                 <Accordion type="single" collapsible>
-                  <AccordionItem value="item-1">
+                  <AccordionItem value={categoryName}>
                     <AccordionTrigger>{categoryName}</AccordionTrigger>
                     <AccordionContent>
                       {items.map((item) => (
-                        <button
+                        <Button
                           key={item.id}
+                          size="lg"
+                          variant={"secondary"}
                           onClick={() => handleAddToCart(item)}
                           disabled={item.terminated}
-                          className={`block w-full px-4 py-2 mb-2 ${
+                          className={`block w-full text-left px-4 py-2 mb-2 ${
                             item.terminated
                               ? "bg-gray-500 cursor-not-allowed"
                               : "border hover:bg-foreground/5 "
                           }`}
                         >
                           {item.title} - €{item.price}
-                        </button>
+                        </Button>
                       ))}
                     </AccordionContent>
                   </AccordionItem>
@@ -129,9 +135,9 @@ export default function OrdersPage() {
         </div>
 
         {/* Colonna 2: Carrello (portate selezionate) */}
-        <div className="sticky top-1 h-full flex-1">
+        <div className="sticky top-5 h-full flex-1">
           <h2 className="text-xl font-bold mb-2">Carrello</h2>
-          <input
+          <Input
             className="border p-2 w-full mb-2"
             placeholder="Nome Cliente"
             value={customerName}
@@ -146,13 +152,10 @@ export default function OrdersPage() {
               </div>
             ))
           )}
-          <div className="mt-4 font-bold">Totale: €{total.toFixed(2)}</div>
-          <button
-            onClick={handleCreateOrder}
-            className="bg-blue-500 text-white px-4 py-2 mt-2 w-full"
-          >
+          <div className="my-4 font-bold">Totale: €{total.toFixed(2)}</div>
+          <Button onClick={handleCreateOrder} className="w-full">
             Crea Ordine
-          </button>
+          </Button>
           {orderError && <p className="text-red-500 mt-2">{orderError}</p>}
         </div>
       </div>

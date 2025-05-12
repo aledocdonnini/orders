@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { deleteMenuCategories } from "@/lib/supabase";
 import { toast } from "react-toastify";
-
+import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
 interface MenuCategory {
   id: number;
   name: string;
@@ -54,22 +55,29 @@ export default function MenuCategories({
 
       <div className="">
         {categories.map((category, index) => (
-          <div key={category.id} className="flex items-center gap-2 border p-2">
-            <input
-              type="checkbox"
-              checked={selectedCategories.includes(category.id)}
-              onChange={() => toggleCategorySelection(category.id)}
-            />
-            <span>{category.name}</span>
+          <div key={category.id}>
+            <div className="flex items-center gap-2 border p-2">
+              <Checkbox
+                id={category.id}
+                checked={selectedCategories.includes(category.id)}
+                onChange={() => toggleCategorySelection(category.id)}
+              />
+              <label
+                htmlFor={category.id}
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                {category.name}
+              </label>
+            </div>
           </div>
         ))}
       </div>
-      <button
+      <Button
         onClick={handleDeleteCategories}
         className="bg-red-500 text-white px-4 py-2 mt-4"
       >
         Elimina Selezionati
-      </button>
+      </Button>
     </div>
   );
 }
