@@ -14,7 +14,8 @@ import { NavMain } from "@/components/nav-main";
 import { NavProjects } from "@/components/nav-projects";
 import { NavUser } from "@/components/nav-user";
 import Logo from "@/components/Logo";
-import CustomIcon from "./CustomIcon";
+
+import { usePathname } from "next/navigation";
 import {
   SidebarProvider,
   Sidebar,
@@ -31,6 +32,7 @@ export function AppSidebar({ user }: React.ComponentProps<typeof Sidebar>) {
   const { id } = useParams();
   const eventId = Number(id);
   const prefix = eventId ? "./" : `${eventId}/`;
+  const pathname = usePathname();
 
   const { state, open, setOpen, toggleSidebar } = useSidebar();
   const data = {
@@ -75,11 +77,16 @@ export function AppSidebar({ user }: React.ComponentProps<typeof Sidebar>) {
             <NavProjects
               projects={data.projects}
               toggleSidebar={toggleSidebar}
+              pathname={pathname}
             />
             <Separator className="my-4" />
           </>
         )}
-        <NavMain items={data.navMain} />
+        <NavMain
+          items={data.navMain}
+          toggleSidebar={toggleSidebar}
+          pathname={pathname}
+        />
       </SidebarContent>
       {user && (
         <SidebarFooter>
