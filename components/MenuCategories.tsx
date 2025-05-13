@@ -58,12 +58,12 @@ export default function MenuCategories({
           <div key={category.id}>
             <div className="flex items-center gap-2 border p-2">
               <Checkbox
-                id={category.id}
+                id={`${category.id}`}
                 checked={selectedCategories.includes(category.id)}
                 onChange={() => toggleCategorySelection(category.id)}
               />
               <label
-                htmlFor={category.id}
+                htmlFor={`${category.id}`}
                 className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
               >
                 {category.name}
