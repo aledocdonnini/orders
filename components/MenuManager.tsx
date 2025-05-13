@@ -202,13 +202,10 @@ export default function MenuManager({ eventId, menu, mutate }: Props) {
                 </option>
               ))}
           </select> */}
-          <Select>
-            <SelectTrigger
-              className="w-[150px]"
-              onChange={(e) =>
-                setSelectedCategory(parseInt(e.target.value) || "")
-              }
-            >
+          <Select
+            onValueChange={(value) => setSelectedCategory(parseInt(value))}
+          >
+            <SelectTrigger className="w-[150px]">
               <SelectValue placeholder="Categoria" />
             </SelectTrigger>
             <SelectContent>
