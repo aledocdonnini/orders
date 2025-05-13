@@ -69,11 +69,19 @@ export default function OrdersPage() {
   // Funzione per creare un nuovo ordine
   async function handleCreateOrder() {
     if (!customerName.trim()) {
-      setOrderError("Devi inserire il nome del cliente!");
+      toast({
+        variant: "destructive",
+        description: "Devi inserire il nome del cliente!",
+      });
+      // setOrderError("Devi inserire il nome del cliente!");
       return;
     }
     if (selectedItems.length === 0) {
-      setOrderError("Devi selezionare almeno una portata!");
+      // setOrderError("Devi selezionare almeno una portata!");
+      toast({
+        variant: "destructive",
+        description: "Devi selezionare almeno una portata!",
+      });
       return;
     }
     try {
@@ -91,16 +99,25 @@ export default function OrdersPage() {
         variant: "destructive",
         description: "Errore nella creazione dell'ordine!",
       });
-      setOrderError("Errore nella creazione dell'ordine!");
+      // setOrderError("Errore nella creazione dell'ordine!");
       console.error(err);
     }
   }
 
   return (
     <div className="w-full">
-      <h2 className="text-xl font-bold mb-2"> Portate Disponibili </h2>
+      <div className="mb-5">
+        <h2 className="text-xl font-bold mb-2">Nome</h2>
+        <Input
+          className="border p-2 w-full mb-2"
+          placeholder="Nome Cliente"
+          value={customerName}
+          onChange={(e) => setCustomerName(e.target.value)}
+        />
+      </div>
       <div className="flex gap-5">
-        <div className="flex-1">
+        <div className="flex-0 basis-1/2">
+          <h2 className="text-xl font-bold mb-2"> Portate Disponibili </h2>
           {menu.length === 0 ? (
             <p>Nessuna portata trovata.</p>
           ) : (
@@ -111,20 +128,19 @@ export default function OrdersPage() {
                     <AccordionTrigger>{categoryName}</AccordionTrigger>
                     <AccordionContent>
                       {items.map((item) => (
-                        <Button
+                        <button
                           key={item.id}
-                          size="lg"
-                          variant={"secondary"}
                           onClick={() => handleAddToCart(item)}
                           disabled={item.terminated}
-                          className={`block w-full text-left px-4 py-2 mb-2 ${
+                          className={`flex justify-between w-full text-left px-4 py-3 mb-2 rounded-lg ${
                             item.terminated
                               ? "bg-gray-500 cursor-not-allowed"
-                              : "border hover:bg-foreground/5 "
+                              : "bg-muted hover:bg-foreground/5 "
                           }`}
                         >
-                          {item.title} - €{item.price}
-                        </Button>
+                          <div className="">{item.title}</div>
+                          <div>€{item.price}</div>
+                        </button>
                       ))}
                     </AccordionContent>
                   </AccordionItem>
@@ -135,14 +151,9 @@ export default function OrdersPage() {
         </div>
 
         {/* Colonna 2: Carrello (portate selezionate) */}
-        <div className="sticky top-5 h-full flex-1">
+        <div className="sticky top-5 h-full flex-0 basis-1/2">
           <h2 className="text-xl font-bold mb-2">Carrello</h2>
-          <Input
-            className="border p-2 w-full mb-2"
-            placeholder="Nome Cliente"
-            value={customerName}
-            onChange={(e) => setCustomerName(e.target.value)}
-          />
+
           {selectedItems.length === 0 ? (
             <p>Carrello vuoto.</p>
           ) : (
@@ -156,7 +167,6 @@ export default function OrdersPage() {
           <Button onClick={handleCreateOrder} className="w-full">
             Crea Ordine
           </Button>
-          {orderError && <p className="text-red-500 mt-2">{orderError}</p>}
         </div>
       </div>
     </div>
