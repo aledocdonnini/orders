@@ -1,6 +1,6 @@
-/* @import url("https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap"); */
+@import url("https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap");
 /* @import url("https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap"); */
-@import url("https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,100..900;1,100..900&display=swap");
+/* @import url("https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,100..900;1,100..900&display=swap"); */
 /* @import url("https://fonts.googleapis.com/css2?family=Hubot+Sans:ital,wght@0,200..900;1,200..900&display=swap"); */
 
 @tailwind base;
@@ -94,9 +94,9 @@
   }
   body {
     @apply bg-background text-foreground;
-    /* font-family: "Geist", sans-serif; */
+    font-family: "Geist", sans-serif;
     /* font-family: "Lexend", sans-serif; */
-    font-family: "Archivo", sans-serif;
+    /* font-family: "Archivo", sans-serif; */
     /* font-family: "Hubot Sans", sans-serif; */
     font-optical-sizing: auto;
     font-style: normal;
