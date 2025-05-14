@@ -6,6 +6,20 @@
   "background_color": "#000000",
   "display_override": ["fullscreen", "minimal-ui"],
   "display": "standalone",
+  "screenshots": [
+    {
+      "src": "screen-1.jpg",
+      "type": "image/jpg",
+      "sizes": "1280x720",
+      "form_factor": "wide"
+    },
+    {
+      "src": "screen-2.png",
+      "type": "image/png",
+      "sizes": "720x1280",
+      "form_factor": "narrow"
+    }
+  ],
   "icons": [
     {
       "src": "web-app-manifest-192x192.png",
