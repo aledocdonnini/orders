@@ -1,6 +1,7 @@
 import { createClient } from "@/utils/supabase/server";
 import { ThemeProvider } from "next-themes";
 import Template from "@/components/Template";
+import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 
 import "./globals.css";
 
@@ -162,6 +163,7 @@ export default async function RootLayout({
           disableTransitionOnChange
         >
           <Template user={user}>{children}</Template>
+          <ServiceWorkerRegister />
         </ThemeProvider>
       </body>
     </html>
