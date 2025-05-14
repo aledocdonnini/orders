@@ -202,9 +202,7 @@ export default function MenuManager({ eventId, menu, mutate }: Props) {
                 </option>
               ))}
           </select> */}
-          <Select
-            onValueChange={(value) => setSelectedCategory(parseInt(value))}
-          >
+          <Select onValueChange={(value) => setSelectedCategory(Number(value))}>
             <SelectTrigger className="w-[150px]">
               <SelectValue placeholder="Categoria" />
             </SelectTrigger>
@@ -212,7 +210,7 @@ export default function MenuManager({ eventId, menu, mutate }: Props) {
               {categories
                 .sort((a, b) => a.position - b.position)
                 .map((category) => (
-                  <SelectItem key={category.id} value={category.id}>
+                  <SelectItem key={category.id} value={String(category.id)}>
                     {category.name}
                   </SelectItem>
                 ))}
