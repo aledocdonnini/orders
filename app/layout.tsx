@@ -308,7 +308,7 @@ export default async function RootLayout({
         href="/splash_screens/8.3__iPad_Mini_portrait.png"
       />
 
-      {/* <link rel="manifest" href="/favicon/manifest.json" /> */}
+      <link rel="manifest" href="/favicon/manifest.json" />
       <link rel="manifest" href="/favicon/site.webmanifest" />
       <meta name="mobile-web-app-capable" content="yes" />
       <meta name="apple-touch-fullscreen" content="yes" />

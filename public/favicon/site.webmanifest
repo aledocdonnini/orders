@@ -1,11 +1,21 @@
 {
   "name": "Orders App",
+  "description": "The fastest way to create orders",
   "short_name": "Orders",
-  "start_url": "/",
+  "start_url": "https://app-orders.netlify.app/",
   "theme_color": "#ffffff",
   "background_color": "#000000",
-  "display_override": ["fullscreen", "minimal-ui"],
+  "orientation": "any",
   "display": "standalone",
+  "display_override": ["window-controls-overlay"],
+  "protocol_handlers": [{ "protocol": "mailto", "url": "/newEmail?to=%s" }],
+  "shortcuts": [
+    {
+      "name": "Orders",
+      "url": "https://app-orders.netlify.app/",
+      "description": "The fastest way to create orders"
+    }
+  ],
   "screenshots": [
     {
       "src": "screen-1.jpg",
