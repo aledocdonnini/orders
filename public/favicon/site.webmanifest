@@ -3,7 +3,7 @@
   "id": "ords",
   "description": "The fastest way to create orders",
   "short_name": "Orders",
-  "start_url": "https://app-orders.netlify.app/",
+  "start_url": "https://app-orders.netlify.app/sign-in",
   "theme_color": "#ffffff",
   "background_color": "#000000",
   "orientation": "any",
