@@ -1,7 +1,7 @@
 {
   "name": "Orders App",
   "id": "ords",
-  "description": "The fastest way to create orders",
+  "description": "Il modo più veloce per creare ordini",
   "short_name": "Orders",
   "start_url": "https://app-orders.netlify.app/sign-in",
   "theme_color": "#ffffff",
@@ -13,11 +13,17 @@
   "launch_handler": {
     "client_mode": "focus-existing"
   },
+  "categories": ["food", "lifestyle", "productivity", "utilities"],
+  "dir": "ltr",
+  "lang": "it",
+  "edge_side_panel": {
+    "preferred_width": 600
+  },
   "shortcuts": [
     {
       "name": "Orders",
       "url": "https://app-orders.netlify.app/",
-      "description": "The fastest way to create orders"
+      "description": "Il modo più veloce per creare ordini"
     }
   ],
   "screenshots": [
